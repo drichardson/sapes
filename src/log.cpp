@@ -78,8 +78,8 @@ Log::Log() {
 }
 
 Log::Log(char* sFile) {
+	//Log::Log(); //Go do whatever is normally done - currently not needed
 	file(sFile);
-	Log::Log(); //Go do whatever is normally define
 }
 
 Log::~Log() {
@@ -96,9 +96,9 @@ Log::~Log() {
 char* Log::file(char *sFile) {
 	
 	free(log_opts.file_name);
-	log_opts.file_name = (char *)malloc(strlen(sFile));
-	
-	strcpy(log_opts.file_name, sFile);
+//	log_opts.file_name = (char *)malloc(strlen(sFile));
+	log_opts.file_name = strdup(sFile);
+//	strcpy(log_opts.file_name, sFile);
 
 	return log_opts.file_name;
 }
@@ -122,10 +122,12 @@ void Log::log(const char* format, ...) const {
 		
 		va_start(va, format);
 
+	//	if (log_opts.file_name 
+
 		//If we can't open the file (or the file name is null) then set our file
 		//stream to stdout (so that we can continue normally and not handle error
 		//situations with seperate code)
-		if ((*log_opts.file_name == '\0') || (fLog = fopen(log_opts.file_name, "a")) == NULL) {
+		if (!log_opts.file_name || (*log_opts.file_name == '\0') || (fLog = fopen(log_opts.file_name, "a")) == NULL) {
 			fLog = stdout;
 		}
 			

@@ -310,7 +310,7 @@ int Pop3Server::run()
 	}
 	catch(SocketError & e)
 	{
-		m_log.log("POP3 server error: %s", e.errMsg());
+		m_log.log("POP3Server_run: POP3 server error: %s", e.errMsg());
 		return 1;
 	}
 
@@ -502,7 +502,7 @@ void Pop3Server::retr(char *command)
 		m_sock.send(readBuf, bytesRead);
 
 	if(ferror(fp))
-		m_log.log("POP Server: Error reading '%s'", m.filename);
+		m_log.log("POP3Server_retr: POP Server: Error reading '%s'", m.filename);
 
 	m_sock.putLine("");
 	m_sock.putLine("."); // End of data indicator.

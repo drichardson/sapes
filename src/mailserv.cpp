@@ -39,6 +39,7 @@
 
 VOID WINAPI SAPES_ServiceMain();//DWORD dwArgc,LPTSTR* lpszArgv); - add if needed
 VOID WINAPI SAPES_ServiceCtrlHandler (DWORD Opcode);
+void RemoveExecutable(char* sPath);
 
 SERVICE_STATUS status; 
 SERVICE_STATUS_HANDLE statusHandle;
@@ -175,13 +176,25 @@ int main(int argc, char *argv[])
 	} else if (strcmp(argv[1], "reload") == 0) {
 		//TODO: Implement custom message that will signal an options reload
 	} else if (strcmp(argv[1], "start_alone") == 0) {
+		
+		char *sPath = (char *)malloc(1024);
+
+		//Determine the real path of the service file (which is where config.txt is
+		//hopefully sitting)
+		GetModuleFileName(NULL, sPath, 1024);
+		RemoveExecutable(sPath);
+		strcat(sPath, "\\config.txt");
+
+		//Load options from config.txt (which is now fully pathed in sPath)
 		Options opts;
-		if(!opts.loadValuesFromFile("config.txt"))
-		{
-			fprintf(stderr, "Error loading values from config.txt\n");
-			return 1;
+
+		if(!opts.loadValuesFromFile(sPath)) {
+			free(sPath); //dealloc memory before exiting
+			return 0;
 		}
 
+		free(sPath); //dealloc memory before continuing
+	
 		Listener listener(opts);
 		g_pListener = &listener;
 		int rc = listener.Run();

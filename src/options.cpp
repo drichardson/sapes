@@ -131,7 +131,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	if (cf.getValue("log_file", buf, sizeof(buf))) {
 		Log temp(buf);
 	} else {
-		m_log.log("No log file defined in config file");
+		m_log.log("loadValuesFromFile: No log file defined in config file");
 	}
 
 	//Timestamp log messages?
@@ -152,7 +152,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	}
 	else
 	{
-		m_log.log("Required field 'send_dir' not found.");
+		m_log.log("loadValuesFromFile: Required field 'send_dir' not found.");
 		return false;
 	}
 
@@ -162,7 +162,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		int count = atoi(buf);
 
 		if(count < 0)
-			m_log.log("Invalid domain_count value (%d, which is less than 0). No default used.");
+			m_log.log("loadValuesFromFile: Invalid domain_count value (%d, which is less than 0). No default used.");
 		else
 		{
 			for(unsigned int i = 1; i <= (unsigned int)count; ++i)
@@ -173,14 +173,14 @@ bool Options::loadValuesFromFile(const char* filename)
 				safe_snprintf(buf, sizeof(buf), "domain%u", i);
 				if(!cf.getValue(buf, domain, sizeof(domain)))
 				{
-					m_log.log("Could not read value for %s", buf);
+					m_log.log("loadValuesFromFile: Could not read value for %s", buf);
 					return false;
 				}
 
 				safe_snprintf(buf, sizeof(buf), "domain%u_mailboxes", i);
 				if(!cf.getValue(buf, mailbox, sizeof(mailbox)))
 				{
-					m_log.log("Could not read value for %s", buf);
+					m_log.log("loadValuesFromFile: Could not read value for %s", buf);
 					return false;
 				}
 				else
@@ -190,7 +190,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	}
 	else
 	{
-		m_log.log("Required field 'domain_count' not found.");
+		m_log.log("loadValuesFromFile: Required field 'domain_count' not found.");
 		return false;
 	}
 
@@ -199,7 +199,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
 		{
-			m_log.log("Invalid smtp_port value (%d, which is less than 1). Default (%d) used.",
+			m_log.log("loadValuesFromFile: Invalid smtp_port value (%d, which is less than 1). Default (%d) used.",
 					  tmp, m_smtp_listen_port);
 		}
 		else
@@ -211,7 +211,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
 		{
-			m_log.log("Invalid pop3_port value (%d, which is less than 1). Default (%d) used.",
+			m_log.log("loadValuesFromFile: Invalid pop3_port value (%d, which is less than 1). Default (%d) used.",
 					  tmp, m_pop3_listen_port);
 		}
 		else
@@ -223,7 +223,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
 		{
-			m_log.log("Invalid http_port value (%d, which is less than 1). Default (%d) used.",
+			m_log.log("loadValuesFromFile: Invalid http_port value (%d, which is less than 1). Default (%d) used.",
 					  tmp, m_http_listen_port);
 		}
 		else
@@ -234,7 +234,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	{
 		int tmp = atoi(buf);
 		if(tmp < 1)
-			m_log.log("Invalid scan_interval value (%d, which is less than 1). Default (%d) used.", tmp);
+			m_log.log("loadValuesFromFile: Invalid scan_interval value (%d, which is less than 1). Default (%d) used.", tmp);
 		else
 			m_scan_interval = tmp;
 	}
@@ -243,7 +243,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	{
 		int tmp = atoi(buf);
 		if(tmp < 1)
-			m_log.log("Invalid sender_thread value (%d, which is less than 1). Default (%d) used.", tmp);
+			m_log.log("loadValuesFromFile: Invalid sender_thread value (%d, which is less than 1). Default (%d) used.", tmp);
 		else
 			m_sender_threads = tmp;
 	}

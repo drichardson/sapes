@@ -120,7 +120,7 @@ THREAD_RETTYPE WINAPI Sender::thread_routine(void* pData)
 				}
 				else
 				{
-					pThis->m_log.log("Error: m_pfiles is an empty list but the semaphore indicates it shouldn't be.");
+					pThis->m_log.log("Sender_thread_routine: Error: m_pfiles is an empty list but the semaphore indicates it shouldn't be.");
 					release_mutex(pThis->m_fileListMutex);
 				}
 			}
@@ -168,20 +168,20 @@ void Sender::process_file(const char* filename)
 
 	if(!fp)
 	{
-		m_log.log("Error opening '%s'", filename);
+		m_log.log("Sender_process_file: Error opening '%s'", filename);
 		goto error;
 	}
 
 	// Make sure this is a sender file.
 	if(!getLine(fp, line, sizeof line))
 	{
-		m_log.log("Error reading sender file header string from '%s'", filename);
+		m_log.log("Sender_process_file: Error reading sender file header string from '%s'", filename);
 			goto error;
 	}
 
 	if(strcmp(line, "MAILSERV SENDER FILE") != 0)
 	{
-		m_log.log("Error: First line of '%s' was not MAILSERV SENDER FILE", filename);
+		m_log.log("Sender_process_file: Error: First line of '%s' was not MAILSERV SENDER FILE", filename);
 		goto error;
 	}
 
@@ -190,7 +190,7 @@ void Sender::process_file(const char* filename)
 	// Make sure the file ends with <CRLF>.<CRLF>. Otherwise it may not have been completly written.
 	if(fseek(fp, -5, SEEK_END) != 0)
 	{
-		m_log.log("Error seeking to end of '%s'.", filename);
+		m_log.log("Sender_process_file: Error seeking to end of '%s'.", filename);
 		goto error;
 	}
 
@@ -198,21 +198,21 @@ void Sender::process_file(const char* filename)
 
 	if(fread(line, 1, 5, fp) != 5)
 	{
-		m_log.log("Error: Sender file '%s' does not end in <CRLF>.<CRLF>", filename);
+		m_log.log("Sender_process_file: Error: Sender file '%s' does not end in <CRLF>.<CRLF>", filename);
 		incomplete = true;
 		goto error;
 	}
 
 	if(!(line[0] == CR && line[1] == LF && line[2] == '.' && line[3] == CR && line[4] == LF))
 	{
-		m_log.log("Error: Sender file '%s' does not end in <CRLF>.<CRLF>", filename);
+		m_log.log("Sender_process_file: Error: Sender file '%s' does not end in <CRLF>.<CRLF>", filename);
 		goto error;
 	}
 
 	if(fseek(fp, pos, SEEK_SET))
 	{
 		// Move to the saved position (right after MAILSERV SENDER FILE).
-		m_log.log("Error seeking to position after MAILSERV SEDNER FILE in '%s'", filename);
+		m_log.log("Sender_process_file: Error seeking to position after MAILSERV SEDNER FILE in '%s'", filename);
 		goto error;
 	}
 
@@ -222,13 +222,13 @@ void Sender::process_file(const char* filename)
 		char domain[SMTP_MAX_TEXT_LINE];
 		if(!getLine(fp, domain, sizeof domain))
 		{
-			m_log.log("Error getting the domain for '%s'", line);
+			m_log.log("Sender_process_file: Error getting the domain for '%s'", line);
 			goto error;
 		}
 
 		if(strcmp(domain, "<END>") == 0)
 		{
-			m_log.log("Expecting domain for user '%s' but got <END>", line);
+			m_log.log("Sender_process_file: Expecting domain for user '%s' but got <END>", line);
 			goto error;
 		}
 
@@ -241,13 +241,13 @@ void Sender::process_file(const char* filename)
 
 	if(!from)
 	{
-		m_log.log("Error: No from in sender file '%s'", filename);
+		m_log.log("Sender_process_file: Error: No from in sender file '%s'", filename);
 		goto error;
 	}
 
 	if(!to)
 	{
-		m_log.log("Error: No to list in sender file '%s'", filename);
+		m_log.log("Sender_process_file: Error: No to list in sender file '%s'", filename);
 		goto error;
 	}
 
@@ -294,7 +294,7 @@ void Sender::process_file(const char* filename)
 			fseek(fp, pos, SEEK_SET);
 			if(!sendBounceMessage(fp, from, p, reason))
 			{
-				m_log.log("Error sending bounce message to %s@%s (couldn't send to %s@%s)",
+				m_log.log("Sender_process_file: Error sending bounce message to %s@%s (couldn't send to %s@%s)",
 					from->user, from->domain, p->user, p->domain);
 			}
 		}
@@ -336,7 +336,7 @@ bool Sender::copyMessageToLocalMailbox(FILE* fp_sender, long endpos, const char*
 
 	if(!fp)
 	{
-		m_log.log("Could not create file in mailbox '%s'", mailbox_dir);
+		m_log.log("Sender_copyMessageToLocalMailbox: Could not create file in mailbox '%s'", mailbox_dir);
 		return false;
 	}
 
@@ -353,7 +353,7 @@ bool Sender::copyMessageToLocalMailbox(FILE* fp_sender, long endpos, const char*
 		{
 			if(fwrite(buf, 1, bytesRead, fp) != (size_t)bytesRead)
 			{
-				m_log.log("Error writing to '%s'", filename);
+				m_log.log("Sender_copyMessageToLocalMailbox: Error writing to '%s'", filename);
 				retval = false;
 				break;
 			}
@@ -364,10 +364,10 @@ bool Sender::copyMessageToLocalMailbox(FILE* fp_sender, long endpos, const char*
 	}
 
 	if(ferror(fp_sender))
-		m_log.log("Error while reading from sender file.");
+		m_log.log("Sender_copyMessageToLocalMailbox: Error while reading from sender file.");
 
 	if(ferror(fp))
-		m_log.log("Error while writing to '%s'", filename);
+		m_log.log("Sender_copyMessageToLocalMailbox: Error while writing to '%s'", filename);
 
 	fclose(fp);
 
@@ -403,7 +403,7 @@ bool Sender::sendMessageToRemoteMailbox(FILE* fp,
 	if(!dns_resolve_mx_to_addr(to->domain, &exchanger))
 	{
 		reason = RF_HOST_NOT_FOUND;
-		m_log.log("Could not get MX (mail exchanger) record for '%s'", to->domain);
+		m_log.log("Sender_sendMessageToRemoteMailbox: Could not get MX (mail exchanger) record for '%s'", to->domain);
 		return false;
 	}
 
@@ -417,7 +417,7 @@ bool Sender::sendMessageToRemoteMailbox(FILE* fp,
 	if(!paddr)
 	{
 		reason = RF_HOST_NOT_FOUND;
-		m_log.log("Could not get address for '%s'", exchanger);
+		m_log.log("Sender_sendMessageToRemoteMailbox: Could not get address for '%s'", exchanger);
 		delete[] exchanger;
 		return false;
 	}
@@ -427,7 +427,7 @@ bool Sender::sendMessageToRemoteMailbox(FILE* fp,
 	if(connect(s, (sockaddr*)&addr, sizeof addr) != 0)
 	{
 		reason = RF_COULD_NOT_CONNECT_TO_HOST;
-		m_log.log("Could not connect to '%s'", exchanger);
+		m_log.log("Sender_sendMessageToRemoteMailbox: Could not connect to '%s'", exchanger);
 		delete[] exchanger;
 		return false;
 	}
@@ -742,7 +742,7 @@ bool Sender::sendMessage(Socket & s, FILE *fp, const Mailbox* from, const Mailbo
 	}
 	catch(SocketError & e)
 	{
-		m_log.log("Socket error while sending message: %s", e.errMsg());
+		m_log.log("Sender_sendMessageToRemoteMailbox: Socket error while sending message: %s", e.errMsg());
 		return false;
 	}
 
@@ -774,7 +774,7 @@ void Sender::Run()
 		m_bFileListSemCreated = true;
 	else
 	{
-		m_log.log("Could not create file list semaphore. Sender exiting.");
+		m_log.log("Sender_Run: Could not create file list semaphore. Sender exiting.");
 		return;
 	}
 
@@ -782,7 +782,7 @@ void Sender::Run()
 		m_bFileListMutexCreated = true;
 	else
 	{
-		m_log.log("Could not create file list mutex. Sender exiting.");
+		m_log.log("Sender_Run: Could not create file list mutex. Sender exiting.");
 		return;
 	}
 
@@ -790,7 +790,7 @@ void Sender::Run()
 		m_bFileListEmptySemCreated = true;
 	else
 	{
-		m_log.log("Could not create file list empty semaphore. Sender exiting.");
+		m_log.log("Sender_Run: Could not create file list empty semaphore. Sender exiting.");
 		return;
 	}
 	
@@ -802,7 +802,7 @@ void Sender::Run()
 	for(unsigned int i = 0; i < count; ++i)
 	{
 		if(!create_thread(thread_routine, this))
-			m_log.log("Error creating sending thread #%u", i);
+			m_log.log("Sender_Run: Error creating sending thread #%u", i);
 	}
 
 	while(wait_semaphore(m_fileListEmptySemaphore))
@@ -835,7 +835,7 @@ bool Sender::build_list()
 {
 	if(!wait_mutex(m_fileListMutex))
 	{
-		m_log.log("Error while waiting for file list mutex.");
+		m_log.log("Sender_build_list: Error while waiting for file list mutex.");
 		return false;
 	}
 
