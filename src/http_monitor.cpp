@@ -392,6 +392,7 @@ void HttpMonitor::get_domain(const char* domain)
 		r.addData("<br>");
 		r.addData("accounts:<br>");
 
+#ifdef WIN32		
 		WIN32_FIND_DATA fd;
 		::SetCurrentDirectory(pL->mailbox_dir);
 		HANDLE hFind = ::FindFirstFile("*.*", &fd);
@@ -413,6 +414,7 @@ void HttpMonitor::get_domain(const char* domain)
 			
 			::FindClose(hFind);
 		}
+#endif
 
 		const char post_html[] = "\n</body>\n</html>";
 		r.addData(post_html, sizeof(post_html) - 1);

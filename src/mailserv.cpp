@@ -238,6 +238,7 @@ int main(int argc, char *argv[])
 #endif //win32
 }
 
+#ifdef WIN32
 /*
 //Niftly little debug tool for suddenly crashing services :)
 void out(char* text) {
@@ -373,3 +374,5 @@ VOID WINAPI SAPES_ServiceCtrlHandler (DWORD dwOpCode) {
    return; 
 
 }
+
+#endif
