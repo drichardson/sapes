@@ -71,7 +71,10 @@ Sender::FileList::~FileList()
 Sender::Sender(const Options & options, const Accounts & accounts)
 : m_options(options),
 m_accounts(accounts),
-m_pfiles(0)
+m_pfiles(0),
+m_bFileListSemCreated(false),
+m_bFileListMutexCreated(false),
+m_bFileListEmptySemCreated(false)
 {
 }
 
@@ -749,23 +752,43 @@ bool Sender::sendMessage(Socket & s, FILE *fp, const Mailbox* from, const Mailbo
 void Sender::Run()
 {
 	// Reinitialize the semaphore and mutex for this Run.
-	delete_semaphore(m_fileListSemaphore);
-	delete_mutex(m_fileListMutex);
-	delete_semaphore(m_fileListEmptySemaphore);
+	if(m_bFileListSemCreated)
+	{
+		delete_semaphore(m_fileListSemaphore);
+		m_bFileListSemCreated = false;
+	}
 
-	if(!create_semaphore(m_fileListSemaphore))
+	if(m_bFileListMutexCreated)
+	{
+		delete_mutex(m_fileListMutex);
+		m_bFileListMutexCreated = false;
+	}
+
+	if(m_bFileListEmptySemCreated)
+	{
+		delete_semaphore(m_fileListEmptySemaphore);
+		m_bFileListEmptySemCreated = false;
+	}
+
+	if(create_semaphore(m_fileListSemaphore))
+		m_bFileListSemCreated = true;
+	else
 	{
 		m_log.log("Could not create file list semaphore. Sender exiting.");
 		return;
 	}
 
-	if(!create_mutex(m_fileListMutex))
+	if(create_mutex(m_fileListMutex))
+		m_bFileListMutexCreated = true;
+	else
 	{
 		m_log.log("Could not create file list mutex. Sender exiting.");
 		return;
 	}
 
-	if(!create_semaphore(m_fileListEmptySemaphore))
+	if(create_semaphore(m_fileListEmptySemaphore))
+		m_bFileListEmptySemCreated = true;
+	else
 	{
 		m_log.log("Could not create file list empty semaphore. Sender exiting.");
 		return;

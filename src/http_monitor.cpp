@@ -284,11 +284,8 @@ int HttpMonitor::run()
 	return 0;
 }
 
-void HttpMonitor::err(HTTP_RESPONSE_CODE errcode, const char* msg)
+void HttpMonitor::err(HTTP_RESPONSE_CODE errcode)
 {
-	if(msg == NULL)
-		msg = msgFromCode(errcode);
-
 	HttpResponse r(errcode);
 
 	switch(errcode)
@@ -349,23 +346,39 @@ void HttpMonitor::get(char* get_command)
 
 void HttpMonitor::get_domain(const char* domain)
 {
-	// Get the main status page.
-	HttpResponse r(HTTP_OK);
+	// Make sure the domain exists.
+	bool bDomainFound = false;
+	for(const DomainList *pDL = m_options.domains(); pDL; pDL = pDL->next)
+	{
+		if(strcasecmp(pDL->domain, domain) == 0)
+		{
+			bDomainFound = true;
+			break;
+		}
+	}
 
-	const char pre_html[] =
-		DOCTYPE_STRICT
-		"<html>\n<head><title>sapes - domain information</title></head>\n"
-		"<body>\n";
-	
-	r.addData(pre_html, sizeof(pre_html) - 1);
+	if(bDomainFound)
+	{
+		// Get the main status page.
+		HttpResponse r(HTTP_OK);
 
-	r.addData("<h1>");
-	r.addData(domain);
-	r.addData("</h1>\n<p>Here is some information.");
-	
-	const char post_html[] = "\n</body>\n</html>";
-	r.addData(post_html, sizeof(post_html) - 1);
-	r.send(m_sock);	
+		const char pre_html[] =
+			DOCTYPE_STRICT
+			"<html>\n<head><title>sapes - domain information</title></head>\n"
+			"<body>\n";
+		
+		r.addData(pre_html, sizeof(pre_html) - 1);
+
+		r.addData("<h1>");
+		r.addData(domain);
+		r.addData("</h1>\n<p>Here is some information.");
+		
+		const char post_html[] = "\n</body>\n</html>";
+		r.addData(post_html, sizeof(post_html) - 1);
+		r.send(m_sock);
+	}
+	else
+		err(HTTP_NOTFOUND);
 }
 
 void HttpMonitor::get_main()

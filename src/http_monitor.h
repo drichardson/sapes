@@ -43,7 +43,7 @@ class HttpMonitor
 	Accounts & m_accounts;
 	const Options & m_options;
 
-	void err(HTTP_RESPONSE_CODE http_res, const char* msg = NULL); // Send HTTP error to client.
+	void err(HTTP_RESPONSE_CODE http_res); // Send HTTP error to client.
 	void get(char *command); // Process an HTTP GET request.
 	void get_main();
 	void get_domain(const char* domain);

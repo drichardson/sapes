@@ -52,8 +52,11 @@ class Sender
 	const Accounts & m_accounts;
 	bool m_run;
 	SEMAPHORE m_fileListSemaphore;
+	bool m_bFileListSemCreated;
 	MUTEX m_fileListMutex;
+	bool m_bFileListMutexCreated;
 	SEMAPHORE m_fileListEmptySemaphore;
+	bool m_bFileListEmptySemCreated;
 
 	struct FileList
 	{
