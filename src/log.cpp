@@ -81,14 +81,17 @@ void log_uninit()
 */
 
 Log::Log() {
+	m_usepvt = false;
 }
 
 Log::Log(char* sFile) {
-	//Log::Log(); //Go do whatever is normally done - currently not needed
+	m_usepvt = false;
 	file(sFile);
 }
 
 Log::~Log() {
+	if (m_usepvt) 
+		free(m_pvtfile);
 }
 
 /* Log::file()
@@ -102,9 +105,8 @@ Log::~Log() {
 char* Log::file(char *sFile) {
 	
 	free(log_opts.file_name);
-//	log_opts.file_name = (char *)malloc(strlen(sFile));
+
 	log_opts.file_name = strdup(sFile);
-//	strcpy(log_opts.file_name, sFile);
 
 	return log_opts.file_name;
 }
@@ -119,7 +121,6 @@ char* Log::file(char *sFile) {
    Created By: Douglas Ryan Richardson
    Updates   : Oren Nachman - Log to file
 */
-
 void Log::log(const char* format, ...) const {
 
 	if (wait_mutex(log_mutex)) {
@@ -133,7 +134,7 @@ void Log::log(const char* format, ...) const {
 		//I was considering putting in fall back code - where if m_pvtfile can not be opened then 
 		//logs fall back to the main log - but this would be counterproductive (think of wading through
 		//giant logs)
-		if (m_pvtfile == NULL)
+		if (m_usepvt)
 			filename = m_pvtfile;
 		else 
 			filename = log_opts.file_name;
@@ -164,7 +165,7 @@ void Log::log(const char* format, ...) const {
 		if (fLog != stdout) 
 			fclose(fLog);
 
-		CheckLogSize();
+		CheckLogSize(filename);
 
 		va_end(va);
 
@@ -176,15 +177,15 @@ void Log::log(const char* format, ...) const {
    ===================
    General: Checks the size of the log file and moves it to an archive if
             needed - this forces the next log() call to create a new archive
-   Usage  : CheckLogSize() - can also be called externally (not sure why you
+   Usage  : CheckLogSize(filename) - can also be called externally (not sure why you
             would want to though)
    Returns: void
    Note   : function is const because it is called by log() which is also const
    
    Created By: Oren Nachman
 */
-void Log::CheckLogSize() const {
-	int log_file = open(log_opts.file_name, _O_RDONLY);
+void Log::CheckLogSize(char* filename) const {
+	int log_file = open(filename, _O_RDONLY);
 
 	if ((unsigned long)filelength(log_file) > log_opts.max_file_size) {
 		
@@ -197,17 +198,17 @@ void Log::CheckLogSize() const {
 		time(&tLocal);
 		tmLocal = localtime(&tLocal);
 		
-		sprintf(archive, "%s.%d%d%d", log_opts.file_name, tmLocal->tm_mday, tmLocal->tm_mon, tmLocal->tm_year);
+		sprintf(archive, "%s.%d%d%d", filename, tmLocal->tm_mday, tmLocal->tm_mon, tmLocal->tm_year);
 		
 		close(log_file); //close so that we can move the file
 
 		while(rename(log_opts.file_name, archive) && iFiles < 50) {
 			printf("%d\n", GetLastError());
-			sprintf(archive, "%s.%d%d%d.%d", log_opts.file_name, tmLocal->tm_mday, tmLocal->tm_mon, tmLocal->tm_year, iFiles++);
+			sprintf(archive, "%s.%d%d%d.%d", filename, tmLocal->tm_mday, tmLocal->tm_mon, tmLocal->tm_year, iFiles++);
 		}
 
 		if (iFiles >= 50) {
-			log("Log::CheckLogSize: Current log exceeds max size - but can not be moved to an archive (after 50 tries)!");
+			log("Log::CheckLogSize: Current log exceeds max size - but can not be moved to an archive (after 50 tries)! - %s", archive);
 		} else {
 			log("Log::CheckLogSize: Log exceeded maximum size and was archived to: %s", archive);
 		}
@@ -273,7 +274,12 @@ int Log::loglevel() {
    Created By: Oren Nachman
 */
 char* Log::PrivateLogFile(char* filename) {
-	free(m_pvtfile);
+	
+	if (filename != NULL) 
+		if (m_usepvt) 
+			free(m_pvtfile);
+		else
+			m_usepvt = true;
 
 	m_pvtfile = strdup(filename);
 

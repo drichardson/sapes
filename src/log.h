@@ -73,10 +73,11 @@ public:
 	char* PrivateLogFile(char* filename);
 	char* PrivateLogFile();
 
-	void Log::CheckLogSize() const; //called by log() which is also const
+	void Log::CheckLogSize(char* filename) const; //called by log() which is also const
 
 private:
 	char *m_pvtfile;
+	bool m_usepvt;
 };
 
 #endif

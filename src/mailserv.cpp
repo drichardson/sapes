@@ -77,9 +77,9 @@ int main(int argc, char *argv[])
 
 #ifndef WIN32
 	Options opts;
-	if(!opts.loadValuesFromFile("config.txt"))
+	if(!opts.loadValuesFromFile("sapes.conf"))
 	{
-		fprintf(stderr, "Error loading values from config.txt\n");
+		fprintf(stderr, "Error loading values from sapes.conf\n");
 		return 1;
 	}
 
@@ -176,16 +176,15 @@ int main(int argc, char *argv[])
 	} else if (strcmp(argv[1], "reload") == 0) {
 		//TODO: Implement custom message that will signal an options reload
 	} else if (strcmp(argv[1], "start_alone") == 0) {
-		
 		char *sPath = (char *)malloc(1024);
 
-		//Determine the real path of the service file (which is where config.txt is
+		//Determine the real path of the service file (which is where sapes.conf is
 		//hopefully sitting)
 		GetModuleFileName(NULL, sPath, 1024);
 		RemoveExecutable(sPath);
-		strcat(sPath, "\\config.txt");
+		strcat(sPath, "\\sapes.conf");
 
-		//Load options from config.txt (which is now fully pathed in sPath)
+		//Load options from sapes.conf (which is now fully pathed in sPath)
 		Options opts;
 
 		if(!opts.loadValuesFromFile(sPath)) {
@@ -240,9 +239,9 @@ int main(int argc, char *argv[])
 	printf("%s\n", argv[1]);
 
 	Options opts;
-	if(!opts.loadValuesFromFile("config.txt"))
+	if(!opts.loadValuesFromFile("sapes.conf"))
 	{
-		fprintf(stderr, "Error loading values from config.txt\n");
+		fprintf(stderr, "Error loading values from sapes.conf\n");
 		return 1;
 	}
 
@@ -298,16 +297,16 @@ void WINAPI SAPES_ServiceMain() { //DWORD dwArgc,LPTSTR* lpszArgv) { - add if ne
 	//      it should take that long to start anyway (currently: loads opts)
 
 	
-	//Determine the real path of the service file (which is where config.txt is
+	//Determine the real path of the service file (which is where sapes.conf is
 	//hopefully sitting)
 	GetModuleFileName(NULL, sPath, 1024);
 	RemoveExecutable(sPath);
-	strcat(sPath, "\\config.txt");
+	strcat(sPath, "\\sapes.conf");
 
-	//Load options from config.txt (which is now fully pathed in sPath)
+	//Load options from sapes.conf (which is now fully pathed in sPath)
 	Options opts;
 	if(!opts.loadValuesFromFile(sPath)) {
-		//fprintf(stderr, "Error loading values from config.txt\n");
+		//fprintf(stderr, "Error loading values from sapes.conf\n");
 		free(sPath); //dealloc memory before exiting
 		return;
 	}
