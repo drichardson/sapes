@@ -234,7 +234,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	if(cf.getValue("resource_dir", buf, sizeof(buf)))
 	{
 		delete[] m_resource_dir;
-		m_send_dir = strdupnew(buf);
+		m_resource_dir = strdupnew(buf);
 	}
 
 	return true;
@@ -289,7 +289,7 @@ FILE* Options::getResourceFile(const char* filename) const
 		char path[MAX_PATH + 1];
 		safe_snprintf(path, sizeof(path), "%s%c%s",
 					  m_resource_dir, DIR_DELIM, filename);
-		fp = fopen(filename, "r");
+		fp = fopen(path, "r");
 	}
 
 	return fp;	

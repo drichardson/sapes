@@ -139,6 +139,7 @@ public:
 	void addData(const void* data, unsigned int len);
 	void addData(const char* str);
 	void addDataFromFile(const char* filename);
+	void addDataFromFile(FILE *fp);
 
 	// Send the response.
 	void send(Socket & s);
@@ -170,6 +171,14 @@ void HttpResponse::addData(const char* str)
 		addData(str, strlen(str));
 }
 
+void HttpResponse::addDataFromFile(FILE *fp)
+{
+	char buf[10000];
+	size_t count;
+	while((count = fread(buf, 1, sizeof(buf), fp)) > 0)
+		addData(buf, count);
+}
+
 void HttpResponse::addDataFromFile(const char* filename)
 {
 	FILE *fp = fopen(filename, "r");
@@ -178,11 +187,7 @@ void HttpResponse::addDataFromFile(const char* filename)
 
 	try
 	{
-		char buf[10000];
-		size_t count;
-		while((count = fread(buf, 1, sizeof(buf), fp)) > 0)
-			addData(buf, count);
-
+		addDataFromFile(fp);
 		fclose(fp);
 	}
 	catch(...)
@@ -288,12 +293,24 @@ void HttpMonitor::err(HTTP_RESPONSE_CODE errcode, const char* msg)
 	{
 	case HTTP_NOTFOUND:
 	{
-		const char html[] =
-			DOCTYPE_STRICT
-			"<html><head><title>404 Not Found</title></head>\n"
-			"<body><h1>Page not found</h1></body></html>\n";
 		r.addHeader("Content-Type: text/html");
-		r.addData(html);
+		
+		FILE *fp = m_options.getResourceFile("404.html");
+		if(fp)
+		{
+			r.addDataFromFile(fp);
+			fclose(fp);
+		}
+		else
+		{
+			const char html[] =
+				DOCTYPE_STRICT
+				"<html><head><title>404 Not Found</title></head>\n"
+				"<body><h1>Page not found</h1></body></html>\n";
+			
+			r.addData(html);
+		}
+		
 		break;
 	}
 	default:
