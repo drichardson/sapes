@@ -41,8 +41,10 @@ void signal_handler(int signum)
 	{
 	case SIGTERM:
 	case SIGINT:
+#ifndef WIN32
 	case SIGQUIT:
 	case SIGHUP:
+#endif
 		if(g_pListener)
 			g_pListener->Stop();
 		break;
@@ -55,8 +57,10 @@ int main()
 
 	signal(SIGTERM, signal_handler);
 	signal(SIGINT, signal_handler);
+#ifndef WIN32
 	signal(SIGQUIT, signal_handler);
 	signal(SIGHUP, signal_handler);
+#endif
 
 	Options opts;
 	if(!opts.loadValuesFromFile("config.txt"))

@@ -96,7 +96,7 @@ void Socket::send(const void* buf, int len, int flags)
 
 	while(totalSent < len)
 	{
-		bytesSent = ::send(sock, buf, len, flags);
+		bytesSent = ::send(sock, (const char*)buf, len, flags);
 		if(bytesSent == SOCKET_ERROR)
 			throw SocketError("Error sending data");
 		totalSent += bytesSent;

@@ -23,8 +23,8 @@ CFG=mailserv - Win32 Debug
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
-# PROP Scc_ProjName ""
-# PROP Scc_LocalPath ""
+# PROP Scc_ProjName "Perforce Project"
+# PROP Scc_LocalPath "."
 CPP=cl.exe
 RSC=rc.exe
 
@@ -99,6 +99,14 @@ SOURCE=.\dns_resolve.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\exceptions.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\http_monitor.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\listener.cpp
 # End Source File
 # Begin Source File
@@ -152,6 +160,14 @@ SOURCE=.\config_file.h
 # Begin Source File
 
 SOURCE=.\dns_resolve.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\exceptions.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\http_monitor.h
 # End Source File
 # Begin Source File
 
