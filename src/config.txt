@@ -1,8 +1,8 @@
 smtp_port:25
 pop3_port:110
-send_dir:c:\senddir
+send_dir:/home/doug/sf/sapes/data/senddir
 scan_interval:1
 sender_threads:5
 domain_count:1
 domain1:the-richardsons.org
-domain1_mailboxes:c:\mailboxes\the-richardsons.org
+domain1_mailboxes:/home/doug/sf/sapes/data/mailboxes/the-richardsons.org
