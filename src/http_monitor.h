@@ -47,6 +47,7 @@ class HttpMonitor
 	void get(char *command); // Process an HTTP GET request.
 	void get_main();
 	void get_domain(const char* domain);
+	void get_addmailbox();
 	const HttpMonitor & operator=(const HttpMonitor &h);
 	
 public:

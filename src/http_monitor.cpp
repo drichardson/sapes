@@ -330,11 +330,16 @@ void HttpMonitor::get(char* get_command)
 
 		const char DOMAIN_PREFIX[] = "/domain/";
 		const char DOMAIN_PREFIX_LEN = sizeof(DOMAIN_PREFIX) - 1;
+
+		const char ADD_PREFIX[] = "/add";
+		const char ADD_PREFIX_LEN = sizeof(ADD_PREFIX) - 1;
 		
 		if(strcmp(path, "/") == 0)
 			get_main();
 		else if(strncmp(path, DOMAIN_PREFIX, DOMAIN_PREFIX_LEN) == 0)
 			get_domain(path + DOMAIN_PREFIX_LEN);
+		else if(strncmp(path, ADD_PREFIX, ADD_PREFIX_LEN) == 0)
+			get_addmailbox();
 		else
 			err(HTTP_NOTFOUND);
 	}
@@ -447,5 +452,27 @@ void HttpMonitor::get_main()
 	
 	const char post_html[] = "\n</ol>\n</body>\n</html>";
 	r.addData(post_html, sizeof(post_html) - 1);
+
+	const char add_html[] = "\n<a href=\"/add\">Click here to Add Mail Box</a>";
+	r.addData(add_html, sizeof(add_html) - 1);
+	r.send(m_sock);
+}
+
+void HttpMonitor::get_addmailbox()
+{
+	HttpResponse r(HTTP_OK);
+	//strlen(add);
+
+	const char pre_html[] =
+	DOCTYPE_STRICT
+	"<html>\n<head><title>sapes monitor</title></head>\n"
+	"<body>\n"
+	"<form method=get action='addmailbox'>"
+	"name:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=text name='accountname'><br>"
+	"password:<input type=text name='password'><br>"
+	"domain:&nbsp;&nbsp;&nbsp;&nbsp;<input type=text name='domain'><br>"
+	"<input type=submit value='Submit'>";
+
+	r.addData(pre_html, sizeof(pre_html) - 1);
 	r.send(m_sock);
 }
