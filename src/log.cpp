@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <io.h>
+#include <fcntl.h>
 
 static bool log_mutex_set = false;
 static MUTEX log_mutex;
@@ -51,6 +53,10 @@ void log_init()
 			exit(1);
 		}
 	}
+
+	log_opts.loglevel = 1;
+	log_opts.timestamp = 0;
+	log_opts.max_file_size = LOG_MAX_SIZE;
 }
 
 void log_uninit()
@@ -119,15 +125,23 @@ void Log::log(const char* format, ...) const {
 	if (wait_mutex(log_mutex)) {
 		va_list va;
 		FILE* fLog;
-		
+		char* filename;
+
+
 		va_start(va, format);
 
-	//	if (log_opts.file_name 
-
+		//I was considering putting in fall back code - where if m_pvtfile can not be opened then 
+		//logs fall back to the main log - but this would be counterproductive (think of wading through
+		//giant logs)
+		if (m_pvtfile == NULL)
+			filename = m_pvtfile;
+		else 
+			filename = log_opts.file_name;
+		
 		//If we can't open the file (or the file name is null) then set our file
 		//stream to stdout (so that we can continue normally and not handle error
 		//situations with seperate code)
-		if (!log_opts.file_name || (*log_opts.file_name == '\0') || (fLog = fopen(log_opts.file_name, "a")) == NULL) {
+		if (!filename || (*filename == '\0') || (fLog = fopen(filename, "a")) == NULL) {
 			fLog = stdout;
 		}
 			
@@ -146,8 +160,11 @@ void Log::log(const char* format, ...) const {
 		vfprintf(fLog, format, va);
 		fputc('\n', fLog);
 		
+
 		if (fLog != stdout) 
 			fclose(fLog);
+
+		CheckLogSize();
 
 		va_end(va);
 
@@ -155,17 +172,114 @@ void Log::log(const char* format, ...) const {
 	}
 }
 
-/* Log::timestamp()
-   =================
+/* Log::CheckLogSize() - Overloaded
+   ===================
+   General: Checks the size of the log file and moves it to an archive if
+            needed - this forces the next log() call to create a new archive
+   Usage  : CheckLogSize() - can also be called externally (not sure why you
+            would want to though)
+   Returns: void
+   Note   : function is const because it is called by log() which is also const
+   
+   Created By: Oren Nachman
+*/
+void Log::CheckLogSize() const {
+	int log_file = open(log_opts.file_name, _O_RDONLY);
+
+	if ((unsigned long)filelength(log_file) > log_opts.max_file_size) {
+		
+		time_t tLocal;
+		tm *tmLocal;
+		
+		char* archive = (char *)malloc(2056);
+		int iFiles = 1;
+
+		time(&tLocal);
+		tmLocal = localtime(&tLocal);
+		
+		sprintf(archive, "%s.%d%d%d", log_opts.file_name, tmLocal->tm_mday, tmLocal->tm_mon, tmLocal->tm_year);
+		
+		close(log_file); //close so that we can move the file
+
+		while(rename(log_opts.file_name, archive) && iFiles < 50) {
+			printf("%d\n", GetLastError());
+			sprintf(archive, "%s.%d%d%d.%d", log_opts.file_name, tmLocal->tm_mday, tmLocal->tm_mon, tmLocal->tm_year, iFiles++);
+		}
+
+		if (iFiles >= 50) {
+			log("Log::CheckLogSize: Current log exceeds max size - but can not be moved to an archive (after 50 tries)!");
+		} else {
+			log("Log::CheckLogSize: Log exceeded maximum size and was archived to: %s", archive);
+		}
+
+		free(archive);
+	}
+	
+	close(log_file);
+}
+
+/* Log::timestamp() - Overloaded
+   ================
    General: Sets the timestamp parameter which govers whether or not the log
             file will prepend it's items with a timestamp
-   Usage  : Log::timestamp(0/1)
-   Returns: void
+   Usage  : Log::timestamp(true / false)
+   Returns: void / timestamp (true / false)
    
-   Created By: Oren Nachman - Log to file
+   Created By: Oren Nachman
 */
 
 void Log::timestamp(bool opt) {
 	log_opts.timestamp = opt;
 }
 
+bool Log::timestamp() {
+	return log_opts.timestamp;
+}
+
+/* Log::loglevel() - Overloaded
+   ===============
+   General: Determines the level of logging
+            1 - Errors
+			2 - Warnings
+			3 - Status Messages
+			4 - Server interactions
+			5 - Full
+   Usage  : Log::loglevel() or Log::loglevel(1->5)
+   Returns: current log level / 0 - invalid log level or the log level that was specified
+   
+   Created By: Oren Nachman
+*/
+int Log::loglevel(int level) {
+
+	if (level < 1 || level > 5) {
+		return 0; //Invalid log level, leave log_level at default
+	}
+
+	return (log_opts.loglevel = level);
+}
+
+int Log::loglevel() {
+	return log_opts.loglevel;
+}
+
+/* Log::PrivateLogFile() - Overloaded
+   =====================
+   General: Sets a log file only for this instance of the Log class
+            Good for logging a server session to a seperate file instead
+			of clogging the main log file
+   Usage  : Log::PrivateLogFile(<filename>)
+   Returns: the log file
+   
+   Created By: Oren Nachman
+*/
+char* Log::PrivateLogFile(char* filename) {
+	free(m_pvtfile);
+
+	m_pvtfile = strdup(filename);
+
+	return m_pvtfile;
+}
+
+char* Log::PrivateLogFile() {
+	return m_pvtfile;
+}

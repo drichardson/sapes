@@ -42,12 +42,16 @@ void log_init();
 // after you no longer need the Log class.
 void log_uninit();
 
+#define LOG_MAX_SIZE 250000;
+
 //Since the log options need to be static and there are a few options they
 //are stored in an external struct. The actual var is defined in log.cpp
 //Params from here are read and written via Log()
 struct log_opts_struct {
 	char* file_name;
 	bool timestamp;
+	int loglevel;
+	unsigned long max_file_size;
 };
 
 class Log
@@ -60,8 +64,19 @@ public:
 
 	void log(const char* format, ...) const;
 	char* file(char* sFile);	
-	void timestamp(bool opt);
 
+	void timestamp(bool opt);
+	bool Log::timestamp();
+
+	int loglevel(int level);
+	int loglevel();
+	char* PrivateLogFile(char* filename);
+	char* PrivateLogFile();
+
+	void Log::CheckLogSize() const; //called by log() which is also const
+
+private:
+	char *m_pvtfile;
 };
 
 #endif
