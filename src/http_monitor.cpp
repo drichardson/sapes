@@ -30,6 +30,8 @@
 #include "http_monitor.h"
 #include "utility.h"
 
+#define DOCTYPE_STRICT "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+
 static const char* msgFromCode(HTTP_RESPONSE_CODE code)
 {
 	const char* msg = NULL;
@@ -62,17 +64,31 @@ static const char* msgFromCode(HTTP_RESPONSE_CODE code)
 class DataList
 {
 	DataList *m_next;
-	const void *m_data;
+	unsigned char *m_data;
 	unsigned int m_data_len;
 public:
-	DataList(const void* pdata, unsigned int len)
-		: m_next(NULL), m_data(pdata), m_data_len(len) {}
-	~DataList() { delete m_next; }
+	DataList(const void* pdata, unsigned int len);
+	~DataList();
 	void setNext(DataList *next) { m_next = next; }
 	const DataList* getNext() const { return m_next; }
 	const void* getData() const { return m_data; }
 	unsigned int getDataLen() const { return m_data_len; }
 };
+
+DataList::DataList(const void* pdata, unsigned int len)
+	: m_next(NULL), m_data(NULL), m_data_len(len)
+{
+	m_data = new unsigned char[m_data_len];
+	if(m_data == NULL)
+		throw RuntimeException("DataList::DataList: Could not allocate memory.");
+	memcpy(m_data, pdata, m_data_len);
+}
+
+DataList::~DataList()
+{
+	delete[] m_data;
+	delete m_next;
+}
 
 class DataObject
 {
@@ -104,7 +120,7 @@ void DataObject::addData(const void *data, unsigned int len)
 	else
 		throw RuntimeException("DataObject::addData - Program Error. Unexpected execution path.");
 } 
-	
+
 class HttpResponse
 {
 	HTTP_RESPONSE_CODE m_response_code;
@@ -122,6 +138,7 @@ public:
 	// Add the data to send.
 	void addData(const void* data, unsigned int len);
 	void addData(const char* str);
+	void addDataFromFile(const char* filename);
 
 	// Send the response.
 	void send(Socket & s);
@@ -151,6 +168,28 @@ void HttpResponse::addData(const char* str)
 {
 	if(str)
 		addData(str, strlen(str));
+}
+
+void HttpResponse::addDataFromFile(const char* filename)
+{
+	FILE *fp = fopen(filename, "r");
+	if(fp == NULL)
+		throw RuntimeException("HttpResponse::addDataFromFile - Couldn't open file.");
+
+	try
+	{
+		char buf[10000];
+		size_t count;
+		while((count = fread(buf, 1, sizeof(buf), fp)) > 0)
+			addData(buf, count);
+
+		fclose(fp);
+	}
+	catch(...)
+	{
+		fclose(fp);
+		throw;
+	}
 }
 
 void HttpResponse::send(Socket & s)
@@ -243,9 +282,25 @@ void HttpMonitor::err(HTTP_RESPONSE_CODE errcode, const char* msg)
 	if(msg == NULL)
 		msg = msgFromCode(errcode);
 
-	char buf[200];
-	safe_snprintf(buf, sizeof(buf), "HTTP/1.0 %d %s", errcode, msg);
-	m_sock.putLine(buf);
+	HttpResponse r(errcode);
+
+	switch(errcode)
+	{
+	case HTTP_NOTFOUND:
+	{
+		const char html[] =
+			DOCTYPE_STRICT
+			"<html><head><title>404 Not Found</title></head>\n"
+			"<body><h1>Page not found</h1></body></html>\n";
+		r.addHeader("Content-Type: text/html");
+		r.addData(html);
+		break;
+	}
+	default:
+		;
+	}
+
+	r.send(m_sock);
 }
 
 void HttpMonitor::get(char* get_command)
@@ -270,27 +325,32 @@ void HttpMonitor::get(char* get_command)
 	}
 }
 
-#define ADDHTML(html) { const char d[] = html; r.addData(d, sizeof(d) - 1); }
-
 void HttpMonitor::get_main()
 {
 	// Get the main status page.
 	HttpResponse r(HTTP_OK);
 	r.addHeader("Content-Type: text/html");
 
-	ADDHTML("<html><head><title>sapes monitor</title></head>\n"
-			"<body>\n"
-			"<h1>sapes monitor</h1></body></html>\n"
-			"<p>\n"
-			"This monitor allows you to view sapes stats. Here is a domain list.\n"
-			"<ol>");
-
+	const char pre_html[] =
+		DOCTYPE_STRICT
+		"<html>\n<head><title>sapes monitor</title></head>\n"
+		"<body>\n"
+		"<h1>sapes monitor</h1>\n"
+		"<p>"
+		"This monitor allows you to view sapes stats. Here is a domain list.<ol>";
+	
+	r.addData(pre_html, sizeof(pre_html) - 1);
+	
 	for(const DomainList *pDL = m_options.domains(); pDL; pDL = pDL->next)
 	{
-		ADDHTML("\n<li>");
-		r.addData(pDL->domain);
+		char buf[1000];
+		safe_snprintf(buf, sizeof(buf),
+					  "\n<li><a href=\"/domain/%s\">%s</a>",
+					  pDL->domain, pDL->domain);
+		r.addData(buf);
 	}
 	
-	ADDHTML("\n</ol>\n</body>\n</html>");
+	const char post_html[] = "\n</ol>\n</body>\n</html>";
+	r.addData(post_html, sizeof(post_html) - 1);
 	r.send(m_sock);
 }

@@ -29,6 +29,7 @@
 
 #include "socket.h"
 #include "utility.h"
+#include <fcntl.h>
 
 //
 // Socket
@@ -120,6 +121,11 @@ void Socket::recv(char* buf, int len, int flags)
 
 void Socket::close()
 {
+	// Shutdown the transmission of data. Close is supposed to verify
+	// the data is sent to the client, but I can't get it to work without
+	// calling shutdown. I looked for information on the UNIX socket FAQ
+	// about this problem but I couldn't find a clear answer.
+	::shutdown(sock, 2);
 	::closesocket(sock);
 	sock = INVALID_SOCKET;
 }
