@@ -1,0 +1,115 @@
+1. What can you access in a multithreaded application? errno?
+2. Should mailboxes be case sensitive or not? I hope not, because they
+are implemented as directory names. On Windows, that is only
+case insensitive.
+4. Must accept messages to postmaster
+5. When you bounce a message, you sent a message from postmaster@domain. If you
+have more than one domain, which one do you choose? Does it matter?
+6. Keep track of the MTA who sent the message so that you can report it in the
+bounced message.
+
+***************************************************************
+SMTP Part
+***************************************************************
+1 Make sure all functions you use are reentrant.
+2 Make sure you strip off the final .<CRLF> when you put the file in a local mailbox.
+3 You must accept messages addressed to postmaster
+
+Relay messages - when a client connects and sends a message relay it to the correct destination. If
+the mail isn't accepted at the destination then send an e-mail back to the client saying that the
+message was rejected.
+
+	Logic - if domain is not a domain that I am responsible for then relay the message to the
+	server responsible for that domain (as given by the MX record from the DNS server).
+
+Accept messages - when a client connects and sends a message to the domain that this server is responsible
+for then verify the mailbox exists and store the message in the appropriate mailbox.
+
+	Logic - if domain is the domain I am responsible for then store the message in the appropriate
+	user's mailbox.
+
+Mailboxes - Each account has a folder that contains all of the messages for that account. Each message
+is stored in a single file. The name of the file is a generated unique name that implies nothing about
+the content of the message, when it was received, the order it was received, or anything else.
+
+Handling multiple domains - Each domain that the server is responsible for has a folder that contains all mailboxes. For instance, if the server is responsible for the-richardsons.org and for lbcf.org, then two folders will exist.
+Suppose the user doug and rebecca exist on the-richardsons.org and kim exists on lbcf.org. Then the directory
+structure will look like this:
+
+	path to the-richardsons.org folder
+		doug
+		rebecca
+	path to lbcf.org folder
+		kim
+
+
+
+Directory Structure
+	mailserv root
+		mailserv
+		global options files
+
+	path to domain1 folder
+		mailbox1
+		...
+		mailboxN
+	...
+	path to domainN folder
+		mailbox1
+		...
+		mailboxN
+
+
+Global Options
+
+smtp_port - the port to listen on (default 25).
+Domain - a domain that the server is responsible for. Multiple entries mean the server is responsible for multiple domains.
+SendDir - the directory where mail messages are stored before they are moved to mailboxes or sent to other SMTP servers. There is no default for this option. No other applications should write files to this directory.
+ScanInterval - how often in seconds to check the SendDir for files to send. Default is 5 seconds.
+SenderThreads - the number of sender threads the server should create. Default is 5.
+
+example options file
+smtp_port:25
+pop3_port:110
+scan_interval:5
+sender_threads:5
+domain_count:2
+domain1:the-richardsons.org
+domain1_mailbox:c:\mailboxes\the-richardsons.org
+domain2:lbcf.org
+domain2_mailbox:c:\lbcfmail
+
+
+
+Send file format - each line ends with CRLF. No line can exceed the text line limit specified in RFC 2821,
+which is 1000 characters (including the CRLF).
+
+MAILSERV SENDER FILE
+From Mailbox
+From Domain
+recipient 1 mailbox
+recipient 1 domain
+...
+recipient N mailbox
+recipient N domain
+<END>
+Message Data (not including the terminating ".<CRLF>"
+.
+
+
+
+Notes - Make sure that when the server is shutdown no sendDir files are partially processed.
+
+
+
+***************************************************************
+POP3 Part
+***************************************************************
+client does this:
+1 connects
+2 sends user
+3 sends pass (optional)
+4 sends stat, list, retr, dele, noop, rset, or quit
+
+The argument to the user command should be mailbox@domain since
+mailserv can operate mail for more than one domain.
