@@ -71,10 +71,10 @@ Sender::FileList::~FileList()
 Sender::Sender(const Options & options, const Accounts & accounts)
 : m_options(options),
 m_accounts(accounts),
-m_pfiles(0),
 m_bFileListSemCreated(false),
 m_bFileListMutexCreated(false),
-m_bFileListEmptySemCreated(false)
+m_bFileListEmptySemCreated(false),
+m_pfiles(0)
 {
 }
 
