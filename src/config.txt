@@ -1,5 +1,5 @@
-smtp_port:25
-pop3_port:110
+smtp_port:2025
+pop3_port:20110
 send_dir:/home/doug/sf/sapes/data/senddir
 scan_interval:1
 sender_threads:5
