@@ -34,7 +34,9 @@
 
 // This implementation for Windows uses DnsQuery, which is only valid for
 // Windows 2000 Professional and XP.
-
+// You will need a new enough version of the Microsoft Platform
+// SDK that has windns.h. You can get it at
+// http://www.microsoft.com/msdownload/platformsdk/sdkupdate/downlevel.htm
 #include <windows.h>
 #include <windns.h>
 
