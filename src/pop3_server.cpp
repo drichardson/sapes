@@ -29,6 +29,12 @@
 #include "utility.h"
 #include "config_file.h"
 
+#ifndef WIN32
+#include <glob.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#endif
+
 //
 // MessageInfoArray
 //
@@ -67,6 +73,14 @@ MessageInfo & MessageInfoArray::getAt(size_t index)
 
 	return m_msginfo[index];
 }
+
+#ifndef WIN32
+static int glob_err_func(const char* filename, int error_code)
+{
+  fprintf(stderr, "Glob error: filename: %s, error code: %d\n", filename, error_code);
+  return 0;
+}
+#endif
 
 bool MessageInfoArray::build_list(const char* mailbox_dir)
 {
@@ -111,7 +125,37 @@ bool MessageInfoArray::build_list(const char* mailbox_dir)
 		FindClose(h);
 	}
 #else
-#error You must define the build_list function
+	glob_t g;
+	char buf[MAX_PATH + 1];
+	safe_snprintf(buf, sizeof buf, "%s/MSG*", mailbox_dir);
+	memset(&g, 0, sizeof(g));	
+
+	if(glob(buf, 0, glob_err_func, &g) != 0)
+		return false;
+
+	for(size_t i = 0; i < g.gl_pathc; ++i)
+	{
+		struct stat s;
+		if(stat(g.gl_pathv[i], &s) == 0 && S_ISREG(s.st_mode))
+		{
+			realpath(g.gl_pathv[i], buf);
+
+			if(m_count >= m_maxcount)
+			{
+				m_maxcount += m_growBy;
+				MessageInfo *p = new MessageInfo[m_maxcount];
+				memcpy(p, m_msginfo, m_count * sizeof(MessageInfo));
+				delete[] m_msginfo;
+				m_msginfo = p;				
+			}
+
+			m_msginfo[m_count].bDelete = false;
+			m_msginfo[m_count].filesize = s.st_size;
+			safe_strcpy(m_msginfo[m_count].filename, buf, sizeof(m_msginfo[m_count].filename));
+		}
+	}
+	
+	globfree(&g);
 #endif
 
 	return true;
@@ -255,6 +299,9 @@ int Pop3Server::run()
 				}
 				else 
 					err("Invalid command");
+				break;
+
+			case P3S_UPDATE:
 				break;
 			}
 		}

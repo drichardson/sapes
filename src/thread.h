@@ -40,7 +40,7 @@ typedef HANDLE SEMAPHORE;
 #include <semaphore.h>
 #define WINAPI
 
-typedef void THREAD_RETTYPE;
+typedef void* THREAD_RETTYPE;
 typedef pthread_mutex_t MUTEX;
 typedef sem_t SEMAPHORE;
 

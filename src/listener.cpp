@@ -54,12 +54,7 @@ static THREAD_RETTYPE WINAPI run_smpt_server(void *pData)
 	Server server(pSD->sock, pSD->accounts, pSD->options);
 	delete pSD; // pSD was allocated by a listener routine.
 
-#ifdef WIN32
-	return server.run();
-#else
-	server.run();
-#endif
-	
+	return (THREAD_RETTYPE)server.run();
 }
 
 static THREAD_RETTYPE WINAPI run_sender(void *pData)
@@ -68,9 +63,7 @@ static THREAD_RETTYPE WINAPI run_sender(void *pData)
 	p->Run();
 	delete p;
 
-#ifdef WIN32
 	return 0;
-#endif	
 }
 
 static THREAD_RETTYPE WINAPI run_pop3_server(void *pData)
@@ -78,11 +71,8 @@ static THREAD_RETTYPE WINAPI run_pop3_server(void *pData)
 	StartupData *pSD = (StartupData*)pData;
 	Pop3Server server(pSD->sock, pSD->accounts, pSD->options);
 	delete pSD;
-#ifdef WIN32
-	return server.run();
-#else
-	server.run();
-#endif
+
+	return (THREAD_RETTYPE)server.run();
 }
 
 Listener::Listener(const Options & opts)

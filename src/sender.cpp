@@ -30,6 +30,12 @@
 #include "dns_resolve.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+
+#ifndef WIN32
+#include <glob.h>
+#include <sys/stat.h>
+#endif
 
 Sender::Mailbox::Mailbox(Mailbox *newNext, const char* newUser, const char* newDomain)
 : next(newNext),
@@ -348,7 +354,7 @@ bool Sender::copyMessageToLocalMailbox(FILE* fp_sender, long endpos, const char*
 			}
 		}
 
-		if(bytesRead != BUFLEN || done)
+		if((size_t)bytesRead != BUFLEN || done)
 			break;
 	}
 
@@ -513,7 +519,7 @@ FILE* Sender::createBounceMessage(FILE *fp_original_message,
 	case RF_MAILBOX_NOT_FOUND:
 		if(fprintf(fp,
 			"Your message was not delivered because the destination mailbox%s" \
-			"was not found.%s%s", CRLF, CRLF) < 0)
+			"was not found.%s%s", CRLF, CRLF, CRLF) < 0)
 			goto write_error;
 		break;
 
@@ -792,6 +798,14 @@ void Sender::Stop()
 	signal_semaphore(m_fileListEmptySemaphore);
 }
 
+#ifndef WIN32
+static int glob_err_func(const char* filename, int error_code)
+{
+	fprintf(stderr, "Glob error: filename: %s, error code: %d\n", filename, error_code);
+	return 0;
+}
+#endif
+
 bool Sender::build_list()
 {
 	if(!wait_mutex(m_fileListMutex))
@@ -826,7 +840,27 @@ bool Sender::build_list()
 		FindClose(h);
 	}
 #else
-#error You must define the build_list function
+	glob_t g;
+	char buf[MAX_PATH + 1];
+	
+	memset(&g, 0, sizeof(g));
+	safe_snprintf(buf, sizeof buf, "%s/MSG*", m_options.sendDir());
+
+	if(glob(buf, 0, glob_err_func, &g) == 0)
+	{
+		for(size_t i = 0; i < g.gl_pathc; ++i)
+		{
+			realpath(g.gl_pathv[i], buf);
+			struct stat s;
+			if(stat(buf, &s) == 0 && !S_ISDIR(s.st_mode))
+			{
+				m_pfiles = new FileList(m_pfiles, buf);
+				signal_semaphore(m_fileListSemaphore);
+			}
+		}
+	}
+
+	globfree(&g);
 #endif
 
 	bool rc = m_pfiles != NULL;

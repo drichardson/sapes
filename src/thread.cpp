@@ -48,7 +48,7 @@ bool create_mutex(MUTEX & mutex)
 	mutex = CreateMutex(NULL, FALSE, NULL);
 	return mutex != NULL;
 #else
-#error Must define create_mutex
+	return pthread_mutex_init(&mutex, NULL) == 0;
 #endif
 }
 
@@ -57,7 +57,7 @@ void delete_mutex(MUTEX & mutex)
 #ifdef WIN32
 	CloseHandle(mutex);
 #else
-#error Must define create_mutex
+	pthread_mutex_destroy(&mutex);
 #endif
 }
 
@@ -66,7 +66,8 @@ bool wait_mutex(MUTEX & mutex)
 #ifdef WIN32
 	return WaitForSingleObject(mutex, INFINITE) != WAIT_FAILED;
 #else
-#error Must define wait_mutex
+	pthread_mutex_lock(&mutex);
+	return true;
 #endif
 }
 
@@ -75,7 +76,7 @@ void release_mutex(MUTEX & mutex)
 #ifdef WIN32
 	ReleaseMutex(mutex);
 #else
-#error Must define release_mutex
+	pthread_mutex_unlock(&mutex);
 #endif
 }
 
@@ -87,7 +88,7 @@ bool create_semaphore(SEMAPHORE & sem)
 	sem = CreateSemaphore(NULL, 0, MAX_SEM_COUNT, NULL);
 	return sem != NULL;
 #else
-#error Must define create_semaphore
+	return sem_init(&sem, 0, 0) == 0;
 #endif
 }
 
@@ -96,7 +97,7 @@ void delete_semaphore(SEMAPHORE & sem)
 #ifdef WIN32
 	CloseHandle(sem);
 #else
-#error Must define delete_semaphore
+	sem_destroy(&sem);
 #endif
 }
 
@@ -105,7 +106,7 @@ bool wait_semaphore(SEMAPHORE & sem)
 #ifdef WIN32
 	return WaitForSingleObject(sem, INFINITE) != WAIT_FAILED;
 #else
-#error Must define wait_semaphore
+	return sem_wait(&sem) == 0;
 #endif
 }
 
@@ -114,6 +115,6 @@ void signal_semaphore(SEMAPHORE & sem)
 #ifdef WIN32
 	ReleaseSemaphore(sem, 1, NULL);
 #else
-#error Must define signal_semaphore
+	sem_post(&sem);
 #endif
 }

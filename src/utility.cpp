@@ -30,6 +30,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #ifdef WIN32
 #define vsnprintf _vsnprintf
@@ -100,7 +102,21 @@ FILE* newfile(const char* path, const char* prefix, char** pNewFileName)
 }
 
 #else
-#error Must define newfile for your system
+FILE* newfile(const char* path, const char* prefix, char** pNewFileName)
+{
+  char filename[MAX_PATH + 1];
+  safe_snprintf(filename, sizeof filename, "%s/%sXXXXXX", path, prefix);
+  int fd = mkstemp(filename);
+
+  if(fd == -1)
+	return NULL;
+
+  *pNewFileName = strdupnew(filename);
+
+  // Attach the file descriptor to the stream.
+  return fdopen(fd, "w");
+}
+
 #endif
 
 bool isdir(const char* path)
@@ -123,12 +139,20 @@ struct in_addr *atoaddr(const char *address, in_addr * psaddr)
     return psaddr;
 
 
-#ifndef WIN32
-#error You need to find out if gethostbyname is thread safe
-#endif
-   // On windows one copy of the returned structure is allocated per
+
+#ifdef WIN32
+   // On Windows one copy of the returned structure is allocated per
    // thread
    host = gethostbyname(address);
+#else
+   // On Linux, you must use gethostbyname_r.
+   hostent host_buf;
+   char buf[1024];
+   int herr;
+   // I don't understand where you get the size of buf. The documentation
+   // just says to pass it in, but not how big to make it.
+   gethostbyname_r(address, &host_buf, buf, sizeof(buf), &host, &herr);
+#endif
 
    if (host != NULL)
     return (struct in_addr *) *host->h_addr_list;
@@ -194,7 +218,8 @@ static bool isIP4addr(const char* addr)
 		char triplet[4];
 
 		// Read a single triplet.
-		for(int j = 0; j < 4; ++i)
+		int j;
+		for(j = 0; j < 4; ++i)
 		{
 			triplet[j] = addr[index++];
 			if(!isdigit(triplet[j]))
@@ -371,10 +396,6 @@ static char *Months[] = {
 	"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-#ifndef WIN32
-#error Make sure localtime is thread safe.
-#endif
-
 bool get_rfc_2822_datetime(time_t t, char *buf, size_t bufSize)
 {
 	int minutes_offset = (-timezone) / 60;
@@ -382,7 +403,12 @@ bool get_rfc_2822_datetime(time_t t, char *buf, size_t bufSize)
 	int hours_offset = minutes_offset / 60;
 	minutes_offset -= (hours_offset * 60);
 
+#ifdef WIN32	
 	struct tm * ptime = localtime(&t);
+#else
+	struct tm tm_buf;
+	struct tm * ptime = localtime_r(&t, &tm_buf);
+#endif
 
 	minutes_offset = minutes_offset > 0 ? minutes_offset : -minutes_offset;
 	hours_offset = hours_offset > 0 ? hours_offset : -hours_offset;

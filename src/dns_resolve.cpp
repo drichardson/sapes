@@ -69,6 +69,80 @@ bool dns_resolve_mx_to_addr(const char* domain, char **phostaddr)
 }
 
 #else
-#error You must implement dns_resolve_mx_to_addr
-//bool dns_resolve_mx_to_addr(const char* domain, char **phostaddr)
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>
+
+bool dns_resolve_mx_to_addr(const char* domain_name, char **mx_name)
+{
+  char *bp, *min_pref_name;
+  unsigned char answer[PACKETSZ], *cp, *eom;
+  int n, ancount, qdcount, buflen, type, pref, ind, min_pref, first_time;
+  char MXHostBuf[PACKETSZ - HFIXEDSZ];
+  HEADER *hp;
+
+  first_time = 1;
+  min_pref_name = NULL;
+
+  if(mx_name == 0)
+	return false;
+
+  *mx_name = NULL;
+  n = res_search(domain_name, C_IN, T_MX, (unsigned char*)&answer, sizeof(answer));
+  if(n == -1)
+	return false;
+
+  if(n > (int)sizeof(answer))
+	n = sizeof(answer);
+
+  hp = (HEADER*)&answer;
+  cp = (unsigned char*) (answer + HFIXEDSZ);
+  eom = (unsigned char*)(answer + n);
+  for(qdcount = ntohs(hp->qdcount); qdcount--; cp += n + QFIXEDSZ) {
+	n = dn_skipname(cp, eom);
+	if(n < 0)
+	  return false;
+  }
+  buflen = sizeof(MXHostBuf) - 1;
+  bp = MXHostBuf;
+  ind = 0;
+  ancount = ntohs(hp->ancount);
+  while(--ancount >= 0 && cp < eom) {
+	n = dn_expand(answer, eom, cp, bp, buflen);
+	if(n < 0)
+	  break;
+	cp += n;
+	GETSHORT(type, cp);
+	cp += INT16SZ + INT32SZ;
+	GETSHORT(n, cp);
+	if(type != T_MX) {
+	  cp += n;
+	  continue;
+	}
+	GETSHORT(pref, cp);
+	n = dn_expand(answer, eom, cp, bp, buflen);
+	if(n < 0)
+	  break;
+	cp += n;
+
+	if(pref < min_pref || first_time) {
+	  first_time = 0;
+	  min_pref = pref;
+	  min_pref_name = bp;
+	}
+
+	n = strlen(bp);
+	bp += n;
+	*bp++ = '\0';
+
+	buflen -= n + 1;
+  }
+
+  if(min_pref_name == NULL)
+	return false;
+
+  *mx_name = strdupnew(min_pref_name);
+  
+  return true;
+}
 #endif
