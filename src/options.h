@@ -31,6 +31,7 @@
 #define MAILSERV_OPTIONS_H
 
 #include "log.h"
+#include <stdio.h>
 
 struct DomainList
 {
@@ -53,6 +54,7 @@ class Options
 	unsigned int m_scan_interval;
 	unsigned int m_sender_threads;
 	bool m_use_http_monitor;
+	char* m_resource_dir;
 
 	void set_default_values();
 
@@ -74,6 +76,9 @@ public:
 	unsigned int scanInterval() const;
 	unsigned int senderThreads() const;
 	bool useHttpMonitor() const;
+
+	// get and open a resource file for reading in binary mode.
+	FILE* getResourceFile(const char* file) const;
 };
 
 #endif

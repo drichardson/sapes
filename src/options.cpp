@@ -69,18 +69,21 @@ Options::~Options()
 {
 	delete[] m_send_dir;
 	delete m_domains;
+	delete m_resource_dir;
 }
 
 void Options::init()
 {
-	m_send_dir = 0;
-	m_domains = 0;
+	m_send_dir = NULL;
+	m_domains = NULL;
+	m_resource_dir = NULL;
 }
 
 void Options::copy(const Options & opt)
 {
 	delete[] m_send_dir;
-	m_send_dir = strdupnew(opt.m_send_dir);
+	if(opt.m_send_dir)
+		m_send_dir = strdupnew(opt.m_send_dir);
 
 	m_smtp_listen_port = opt.m_smtp_listen_port;
 	m_pop3_listen_port = opt.m_pop3_listen_port;
@@ -94,6 +97,10 @@ void Options::copy(const Options & opt)
 	m_sender_threads = opt.m_sender_threads;
 
 	m_use_http_monitor = opt.m_use_http_monitor;
+
+	delete[] m_resource_dir;
+	if(opt.m_resource_dir)
+		m_resource_dir = strdupnew(opt.m_resource_dir);
 }
 
 void Options::set_default_values()
@@ -104,10 +111,12 @@ void Options::set_default_values()
 	m_pop3_listen_port = 110;
 	m_http_listen_port = 80;
 
-	m_send_dir = 0;
-	m_domains = 0;
+	m_send_dir = NULL;
+	m_domains = NULL;
 
 	m_use_http_monitor = true;
+
+	m_resource_dir = NULL;
 }
 
 bool Options::loadValuesFromFile(const char* filename)
@@ -222,6 +231,12 @@ bool Options::loadValuesFromFile(const char* filename)
 	if(cf.getValue("use_http_monitor", buf, sizeof(buf)))
 		m_use_http_monitor = atoi(buf) != 0;
 
+	if(cf.getValue("resource_dir", buf, sizeof(buf)))
+	{
+		delete[] m_resource_dir;
+		m_send_dir = strdupnew(buf);
+	}
+
 	return true;
 }
 
@@ -263,4 +278,19 @@ unsigned int Options::senderThreads() const
 bool Options::useHttpMonitor() const
 {
 	return m_use_http_monitor;
+}
+
+FILE* Options::getResourceFile(const char* filename) const
+{
+	FILE *fp = NULL;
+	
+	if(m_resource_dir)
+	{
+		char path[MAX_PATH + 1];
+		safe_snprintf(path, sizeof(path), "%s%c%s",
+					  m_resource_dir, DIR_DELIM, filename);
+		fp = fopen(filename, "r");
+	}
+
+	return fp;	
 }
