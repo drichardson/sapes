@@ -30,6 +30,10 @@
 #ifndef MAILSERV_LOG_H
 #define MAILSERV_LOG_H
 
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 // log_init sets up internal variables for the Log class. Call this function
 // before creating a Log object.
 void log_init();
@@ -38,13 +42,26 @@ void log_init();
 // after you no longer need the Log class.
 void log_uninit();
 
+//Since the log options need to be static and there are a few options they
+//are stored in an external struct. The actual var is defined in log.cpp
+//Params from here are read and written via Log()
+struct log_opts_struct {
+	char* file_name;
+	bool timestamp;
+};
+
 class Log
 {
+
 public:
 	Log();
+	Log(char* file);
 	~Log();
 
 	void log(const char* format, ...) const;
+	char* file(char* sFile);	
+	void timestamp(bool opt);
+
 };
 
 #endif

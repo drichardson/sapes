@@ -124,6 +124,26 @@ bool Options::loadValuesFromFile(const char* filename)
 	char buf[MAX_CONFIGFILE_LINE_LEN + 1];
 	ConfigFile cf(filename);
 
+	//The first options we need to check are the logging options - so
+	//that we can properly log anything that is needed
+
+	//Check the log_file option and update the logger with the file name
+	if (cf.getValue("log_file", buf, sizeof(buf))) {
+		Log temp(buf);
+	} else {
+		m_log.log("No log file defined in config file");
+	}
+
+	//Timestamp log messages?
+	if (cf.getValue("log_timestamp", buf, sizeof(buf))) {
+		int stamp = atoi(buf);
+
+		if (stamp != 0) {
+			Log temp;
+			temp.timestamp(true);
+		}
+	}
+
 	// send_dir is required. Return false if it is not found.
 	if(cf.getValue("send_dir", buf, sizeof(buf)))
 	{
