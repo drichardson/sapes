@@ -50,6 +50,7 @@ public:
 	~Listener();
 
 	int Run();
+	void Stop();
 };
 
 #endif

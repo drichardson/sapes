@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Douglas Ryan Richardson
+ * Copyright (c) 2003,2004 Douglas Ryan Richardson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,10 +47,12 @@ class Options
 	Log m_log;
 	short m_smtp_listen_port;
 	short m_pop3_listen_port;
+	short m_http_listen_port;
 	char* m_send_dir;
 	DomainList *m_domains;
 	unsigned int m_scan_interval;
 	unsigned int m_sender_threads;
+	bool m_use_http_monitor;
 
 	void set_default_values();
 
@@ -66,10 +68,12 @@ public:
 
 	short smtpListenPort() const;
 	short pop3ListenPort() const;
+	short httpListenPort() const;
 	const char* sendDir() const;
 	const DomainList * domains() const;
 	unsigned int scanInterval() const;
 	unsigned int senderThreads() const;
+	bool useHttpMonitor() const;
 };
 
 #endif

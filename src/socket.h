@@ -51,16 +51,12 @@ typedef int SOCKET;
 
 #endif
 
-class SocketError
-{
-	char *m_errmsg;
-	const SocketError & operator=(const SocketError & s);
+#include "exceptions.h"
 
+class SocketError : public RuntimeException
+{
 public:
-	SocketError(const char* errmsg);
-	SocketError(const SocketError & se);
-	~SocketError();
-	const char* errMsg() const;
+	SocketError(const char* errmsg) : RuntimeException(errmsg) {}
 };
 
 class Socket
@@ -74,7 +70,7 @@ public:
 	// or write or if some other fatal error occurs.
 	bool getLine(char* command_buf, const int BUFLEN, unsigned int *pLength);
 	void putLine(const char* command);
-	void send(const char* buf, int len, int flags = 0);
+	void send(const void* buf, int len, int flags = 0);
 	void recv(char *buf, int len, int flags = 0);
 	void close();
 };

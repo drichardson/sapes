@@ -78,6 +78,11 @@
 //		send the "+OK" and "-ERR" in upper case.
 #define POP3_MAX_RESPONSE_LENGTH 512
 
+// this is not from an RFC. I simply picked a large. Without
+// specifying a value a client could simply keep sending
+// to the server until it ran out of memory.
+#define HTTP_MAX_LINE_LENGTH 2048
+
 // Carraige return
 #define CR 0x0D
 
@@ -87,9 +92,8 @@
 extern const char CRLF[3];
 
 // Duplicate a string using new to allocate memory.
-char* strdupnew(const char* src);
-
-// Copy src to dest. Dest has a size of maxlen. This function makes
+char* strdupnew(const char* src)
+;// Copy src to dest. Dest has a size of maxlen. This function makes
 // sure that dest is NULL terminated (unlike strncpy).
 char* safe_strcpy(char* dest, const char* src, size_t bufsize);
 
@@ -117,8 +121,12 @@ struct in_addr *atoaddr(const char *address, in_addr * psaddr);
 
 
 // nexttoken gets the next token from input and sets pstr to the location
-// after the token.
-bool nexttoken(char** pstr, char* buf, int maxbuf);
+// after the token. delim is the delimiters to break up the string with.
+// delim_tokens are delim characters that you want returned as tokens.
+// If delim and delim_tokens is NULL then the default delim and
+// delim_tokens are used, which are for SMTP and POP3.
+bool nexttoken(char** pstr, char* buf, int maxbuf,
+			   const char* delim = NULL, const char* delim_tokens = NULL);
 
 // If mailbox_ok returns true then it points local_part and domain_part to
 // newly allocated memory (with new) that contains the local part and domain part
@@ -130,5 +138,13 @@ bool mailbox_ok(const char* mailbox, char** plocal_part_out, char** pdomain_part
 // Otherwise, false is returned.
 bool get_rfc_2822_datetime(time_t t, char *buf, size_t bufSize);
 
+enum HTTP_RESPONSE_CODE
+{
+	HTTP_OK = 200,
+	HTTP_BADREQUEST = 400,
+	HTTP_NOTFOUND = 404,
+	HTTP_REQUESTTOLARGE = 413,
+	HTTP_SERVERERROR = 500
+};
 
 #endif

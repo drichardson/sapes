@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Douglas Ryan Richardson
+ * Copyright (c) 2003,2004 Douglas Ryan Richardson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -84,6 +84,7 @@ void Options::copy(const Options & opt)
 
 	m_smtp_listen_port = opt.m_smtp_listen_port;
 	m_pop3_listen_port = opt.m_pop3_listen_port;
+	m_http_listen_port = opt.m_http_listen_port;
 
 	delete m_domains;
 	for(const DomainList *p = opt.m_domains; p; p = p->next)
@@ -91,6 +92,8 @@ void Options::copy(const Options & opt)
 
 	m_scan_interval = opt.m_scan_interval;
 	m_sender_threads = opt.m_sender_threads;
+
+	m_use_http_monitor = opt.m_use_http_monitor;
 }
 
 void Options::set_default_values()
@@ -99,9 +102,12 @@ void Options::set_default_values()
 	m_scan_interval = 1;
 	m_smtp_listen_port = 25;
 	m_pop3_listen_port = 110;
+	m_http_listen_port = 80;
 
 	m_send_dir = 0;
 	m_domains = 0;
+
+	m_use_http_monitor = true;
 }
 
 bool Options::loadValuesFromFile(const char* filename)
@@ -163,7 +169,10 @@ bool Options::loadValuesFromFile(const char* filename)
 	{
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
-			m_log.log("Invalid smtp_port value (%d, which is less than 1). Default (%d) used.", tmp);
+		{
+			m_log.log("Invalid smtp_port value (%d, which is less than 1). Default (%d) used.",
+					  tmp, m_smtp_listen_port);
+		}
 		else
 			m_smtp_listen_port = tmp;
 	}
@@ -172,10 +181,25 @@ bool Options::loadValuesFromFile(const char* filename)
 	{
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
-			m_log.log("Invalid pop3_port value (%d, which is less than 1). Default (%d) used.", tmp);
+		{
+			m_log.log("Invalid pop3_port value (%d, which is less than 1). Default (%d) used.",
+					  tmp, m_pop3_listen_port);
+		}
 		else
 			m_pop3_listen_port = tmp;
 	}
+
+	if(cf.getValue("http_port", buf, sizeof(buf)))
+	{
+		short tmp = (short)atoi(buf);
+		if(tmp < 1)
+		{
+			m_log.log("Invalid http_port value (%d, which is less than 1). Default (%d) used.",
+					  tmp, m_http_listen_port);
+		}
+		else
+			m_http_listen_port = tmp;
+	}	
 
 	if(cf.getValue("scan_interval", buf, sizeof(buf)))
 	{
@@ -195,6 +219,9 @@ bool Options::loadValuesFromFile(const char* filename)
 			m_sender_threads = tmp;
 	}
 
+	if(cf.getValue("use_http_monitor", buf, sizeof(buf)))
+		m_use_http_monitor = atoi(buf) != 0;
+
 	return true;
 }
 
@@ -206,6 +233,11 @@ short Options::smtpListenPort() const
 short Options::pop3ListenPort() const
 {
 	return m_pop3_listen_port;
+}
+
+short Options::httpListenPort() const
+{
+	return m_http_listen_port;
 }
 
 const char* Options::sendDir() const
@@ -226,4 +258,9 @@ unsigned int Options::scanInterval() const
 unsigned int Options::senderThreads() const
 {
 	return m_sender_threads;
+}
+
+bool Options::useHttpMonitor() const
+{
+	return m_use_http_monitor;
 }

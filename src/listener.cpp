@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Douglas Ryan Richardson
+ * Copyright (c) 2003,2004 Douglas Ryan Richardson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include "listener.h"
 #include "server.h"
 #include "pop3_server.h"
+#include "http_monitor.h"
 #include "thread.h"
 
 struct StartupData
@@ -72,6 +73,15 @@ static THREAD_RETTYPE WINAPI run_pop3_server(void *pData)
 {
 	StartupData *pSD = (StartupData*)pData;
 	Pop3Server server(pSD->sock, pSD->accounts, pSD->options);
+	delete pSD;
+
+	return (THREAD_RETTYPE)server.run();
+}
+
+static THREAD_RETTYPE WINAPI run_http_server(void *pData)
+{
+	StartupData *pSD = (StartupData*)pData;
+	HttpMonitor server(pSD->sock, pSD->accounts, pSD->options);
 	delete pSD;
 
 	return (THREAD_RETTYPE)server.run();
@@ -185,6 +195,43 @@ int Listener::Run()
 		closesocket(smtp_listen_socket);
 		closesocket(pop3_listen_socket);
 		return 1;
+	}	
+
+	// Setup the HTML listening socket.
+	SOCKET http_listen_socket = INVALID_SOCKET;
+	if(m_options.useHttpMonitor())
+	{
+		http_listen_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+		if(http_listen_socket == INVALID_SOCKET)
+		{
+			m_log.log("Could not create HTTP listen socket.");
+			closesocket(smtp_listen_socket);
+			closesocket(pop3_listen_socket);
+			return 1;
+		}
+
+		listen_addr.sin_family = AF_INET;
+		listen_addr.sin_port = htons(m_options.httpListenPort());
+		listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+		if(bind(http_listen_socket, (sockaddr*)&listen_addr, sizeof listen_addr) != 0)
+		{
+			m_log.log("Could not bind HTTP listen socket to address.");
+			closesocket(smtp_listen_socket);
+			closesocket(pop3_listen_socket);
+			closesocket(http_listen_socket);
+			return 1;
+		}
+
+		if(listen(http_listen_socket, SOMAXCONN) != 0)
+		{
+			m_log.log("Could not set HTTP socket to listen socket.");
+			closesocket(smtp_listen_socket);
+			closesocket(pop3_listen_socket);
+			closesocket(http_listen_socket);
+			return 1;
+		}
 	}
 
 	while(m_run)
@@ -194,6 +241,8 @@ int Listener::Run()
 		FD_ZERO(&set);
 		FD_SET(smtp_listen_socket, &set);
 		FD_SET(pop3_listen_socket, &set);
+		if(m_options.useHttpMonitor())
+			FD_SET(http_listen_socket, &set);
 
 		ready = select(FD_SETSIZE, &set, NULL, NULL, NULL);
 
@@ -208,7 +257,7 @@ int Listener::Run()
 		if(ready <= 0)
 		{
 			// This is what I want to do but I don't know if I can in a
-			// multi-threaded application. I need to research this.fs
+			// multi-threaded application. I need to research this.
 			// if(errno != EINTR)
 			//	m_log.log("select failed: %s", strerror(errno));
 			continue;
@@ -258,7 +307,43 @@ int Listener::Run()
 			}
 		}
 
+		if(m_options.useHttpMonitor() && FD_ISSET(http_listen_socket, &set))
+		{
+			sockaddr_in addr;
+			socklen_t addr_len = sizeof addr;
+			SOCKET sock = accept(http_listen_socket, (sockaddr*)&addr, &addr_len);
+
+			if(sock == INVALID_SOCKET)
+			{
+				m_log.log("Error accepting HTTP connection.");
+				continue;
+			}
+
+			// pSD will be freed by the thread routine.
+			StartupData *pSD = new StartupData(sock, m_accounts, m_options);
+
+			if(!create_thread(run_http_server, pSD))
+			{
+				m_log.log("Could not create HTTP server thread.");
+				continue;
+			}
+		}
+
 	}
 
+	m_log.log("Listener shutting down.");
+	
+	if(smtp_listen_socket != INVALID_SOCKET)
+		closesocket(smtp_listen_socket);
+	if(pop3_listen_socket != INVALID_SOCKET)
+		closesocket(pop3_listen_socket);
+	if(http_listen_socket != INVALID_SOCKET)
+		closesocket(http_listen_socket);
+
 	return 0;
+}
+
+void Listener::Stop()
+{
+	m_run = false;
 }

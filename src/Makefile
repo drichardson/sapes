@@ -2,7 +2,7 @@ CXXFLAGS=-g -Wall -Werror
 
 OBJS=accounts.o config_file.o dns_resolve.o listener.o log.o \
 	mailserv.o options.o pop3_server.o sender.o server.o socket.o \
-	thread.o utility.o
+	thread.o utility.o http_monitor.o exceptions.o
 
 LIBS=-lresolv -lpthread
 

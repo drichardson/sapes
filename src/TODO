@@ -1,0 +1,9 @@
+***************************************
+* sapes - SMTP and POP3 E-mail Server *
+***************************************
+
+TODO
+
+1. HTTP monitor (make server handle LF without CR).
+2. HTTP configuration tool
+3. Configuration script.

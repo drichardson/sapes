@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Douglas Ryan Richardson
+ * Copyright (c) 2004, Douglas Ryan Richardson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,50 +27,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "listener.h"
-#include "log.h"
+#ifndef MAILSERV_HTTP_MONITOR_H
+#define MAILSERV_HTTP_MONITOR_H
+
+#include "socket.h"
+#include "accounts.h"
 #include "options.h"
+#include "log.h"
+#include "utility.h"
 
-#include "signal.h"
+class HttpMonitor
+{	
+	Socket m_sock;
+	Log m_log;
 
-static Listener *g_pListener = NULL;
+	void err(HTTP_RESPONSE_CODE http_res, const char* msg = NULL); // Send HTTP error to client.
+	void get(char *command); // Process an HTTP GET request.
+	void get_main();
+	
+public:
+	HttpMonitor(SOCKET sock, Accounts & accounts, const Options & options);
+	~HttpMonitor();
 
-void signal_handler(int signum)
-{
-	switch(signum)
-	{
-	case SIGTERM:
-	case SIGINT:
-	case SIGQUIT:
-	case SIGHUP:
-		if(g_pListener)
-			g_pListener->Stop();
-		break;
-	}
-}
+	int run(); // Process an HTTP request.
+};
 
-int main()
-{
-	log_init();
-
-	signal(SIGTERM, signal_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, signal_handler);
-	signal(SIGHUP, signal_handler);
-
-	Options opts;
-	if(!opts.loadValuesFromFile("config.txt"))
-	{
-		fprintf(stderr, "Error loading values from config.txt\n");
-		return 1;
-	}
-
-	Listener listener(opts);
-	g_pListener = &listener;
-	int rc = listener.Run();
-	g_pListener = NULL;
-
-	log_uninit();
-
-	return rc;
-}
+#endif

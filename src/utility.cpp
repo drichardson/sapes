@@ -164,12 +164,16 @@ struct in_addr *atoaddr(const char *address, in_addr * psaddr)
 
 // nexttoken gets the next token from input and sets pstr to the location
 // after the token.
-bool nexttoken(char** pstr, char* buf, int maxbuf)
+bool nexttoken(char** pstr,
+			   char* buf,
+			   int maxbuf,
+			   const char* delim,
+			   const char* delim_tokens)
 {
 	char *s = *pstr;
 	char *p = buf;
-	const char* DELIM = ":<> \t\r\n";
-	const char* DELIM_TOKENS = ":<>";
+	const char* DELIM = delim != NULL ? delim : ":<> \t\r\n";
+	const char* DELIM_TOKENS = delim_tokens != NULL ? delim_tokens : ":<>";
 
 	// Skip whitespace.
 	while(*s && isspace(*s))

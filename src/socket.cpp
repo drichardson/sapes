@@ -31,30 +31,6 @@
 #include "utility.h"
 
 //
-// SocketError
-//
-
-SocketError::SocketError(const char* errmsg)
-{
-	m_errmsg = strdupnew(errmsg);
-}
-
-SocketError::SocketError(const SocketError & se)
-{
-	m_errmsg = strdupnew(se.m_errmsg);
-}
-
-SocketError::~SocketError()
-{
-	delete[] m_errmsg;
-}
-
-const char* SocketError::errMsg() const
-{
-	return m_errmsg;
-}
-
-//
 // Socket
 //
 
@@ -112,7 +88,7 @@ void Socket::putLine(const char* command)
 	send(CRLF, 2);
 }
 
-void Socket::send(const char* buf, int len, int flags)
+void Socket::send(const void* buf, int len, int flags)
 {
 	int bytesSent = 0;
 	int totalSent = 0;

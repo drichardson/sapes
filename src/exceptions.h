@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Douglas Ryan Richardson
+ * Copyright (c) 2004, Douglas Ryan Richardson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,50 +27,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "listener.h"
-#include "log.h"
-#include "options.h"
+#ifndef MAILSERV_EXCEPTIONS_H
+#define MAILSERV_EXCEPTIONS_H
 
-#include "signal.h"
-
-static Listener *g_pListener = NULL;
-
-void signal_handler(int signum)
+class Exception
 {
-	switch(signum)
-	{
-	case SIGTERM:
-	case SIGINT:
-	case SIGQUIT:
-	case SIGHUP:
-		if(g_pListener)
-			g_pListener->Stop();
-		break;
-	}
-}
+public:
+	virtual const char* errMsg() const = 0;	
+};
 
-int main()
+class RuntimeException : public Exception
 {
-	log_init();
+	char *m_msg;
+public:
+	RuntimeException(const RuntimeException & rte);
+	RuntimeException(const char* msg);
+	virtual ~RuntimeException();
 
-	signal(SIGTERM, signal_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, signal_handler);
-	signal(SIGHUP, signal_handler);
+	virtual const char* errMsg() const;
+};
 
-	Options opts;
-	if(!opts.loadValuesFromFile("config.txt"))
-	{
-		fprintf(stderr, "Error loading values from config.txt\n");
-		return 1;
-	}
-
-	Listener listener(opts);
-	g_pListener = &listener;
-	int rc = listener.Run();
-	g_pListener = NULL;
-
-	log_uninit();
-
-	return rc;
-}
+#endif
