@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">
+<html>
+
+<head>
+<title>sapes - Configuration</title>
+</head>
+
+<body>
+
+<h1>Configuration</h1>
+
+<ol>
+ <li>
+  Overview
+  <p>
+   Configuring sapes involves two things: (1) setting up config.txt and (2) setting
+   up the file system.
+   config.txt controls how sapes operates and what domains it is responsible for. The file system
+   must be setup so that you have a directory for each domain and a sub-directory under the
+   domain directory for each mailbox.
+  </p>
+ </li>
+
+ <li>
+  config.txt
+  <p>
+   config.txt is were all of the sapes parameters are stored. mailserv, the
+   sapes program, looks for config.txt in the working directory. If you don't
+   know what the working directory is then simple start sapes from the same
+   directory that config.txt is in. For instance, if config.txt is in /home/doug/sapes
+   then start mailserv like this: cd /home/doug/sapes, ./mailserv. Trying to start
+   mailserv from somewhere else (like cd /home, doug/sapes/mailserv) will result
+   in an error since sapes could not find config.txt.
+  </p>
+  <p>
+   There are several parameters in config.txt. Each of them is explained here.
+   <dl>
+    <dt>smtp_port</dt>
+	<dd>The port that the SMTP server will listen on. The default is 25.</dd>
+
+	<dt>pop3_port</dt>
+	<dd>The port that the POP3 server will listen on. The default is 115</dd>
+
+	<dt>http_port</dt>
+	<dd>The port that the http monitor will listen on. The default is 80</dd>
+
+	<dt>send_dir</dt>
+	<dd>The directory where mail files temporarily stored before delivery. No default.</dd>
+
+	<dt>scan_interval</dt>
+	<dd>The number of seconds sapes waits between scanning send_dir for mail to send.
+	 Default is 1 second.</dd>
+
+	<dt>sender_threads</dt>
+	<dd>The number of threads sapes creates to send e-mails. This allows sapes
+	 to communicate with multiple SMTP servers at the same time. Default is 5.</dd>
+
+	<dt>domain_count</dt>
+	<dd>The number of domains that this configuration file specifies. No default.</dd>
+
+	<dt>domainN</dt>
+	<dd>The Nth domain name that this configuration file specifies. The N is a placeholder
+	 for the domain number. For instance, if it is the 1st domain name, then it would
+	 be domain1. No default.
+	</dd>
+
+	<dt>domainN_mailboxes</dt>
+	<dd>The directory were domainN's mailboxes are located. No default.</dd>
+
+	<dt>use_http_monitor</dt>
+	<dd>Set to 0 to turn the http monitor off, and set to 1 to turn it on. Default is on.</dd>
+
+	<dt>resource_dir</dt>
+	<dd>The directory that contains HTML files that the http monitor uses.</dd>
+   </dl>
+  </p>
+
+  <p>
+  Here is an example config.txt file.
+  <pre style="border-style: solid; border-width: thin;">
+smtp_port:2025
+pop3_port:20110
+http_port:2080
+send_dir:/home/doug/oss/sf/sapes/data/senddir
+scan_interval:1
+sender_threads:5
+domain_count:1
+domain1:the-richardsons.org
+domain1_mailboxes:/home/doug/oss/sf/sapes/data/mailboxes/the-richardsons.org
+use_http_monitor:1
+resource_dir:/home/doug/oss/sf/sapes/resource
+</pre>
+ </li>
+
+ <li>File System
+  <ol>
+   <li>
+    Domains
+	<p>
+     Each domain that is specified in the config.txt file. The config.txt file points to a directory
+	 that is created for the domain. For instance, if domain1_mailboxes is /home/doug/the-richardsons.org,
+	 then that directory must be created.
+   </p>
+   </li>
+
+   <li>
+    Mailboxes
+   </li>
+  </li>
+ </ol>
+
+ <li>
+  Setting up the domain
+  <p>
+   In order to get the e-mail server setup correctly you will have to have
+   a domain that you can configure. You will then need to set the MX
+   records in that domain to point to your machine that you are running
+   sapes on. However, you don't need to do that if you are only going to
+   work on the http monitor. But if you want to setup a complete e-mail
+   server, you will have to do it. In case you don't know, MX stands for
+   mail exchange (I think). It is a DNS record for specifying mail servers
+   for domains.
+  </p>
+ </li>
+ 
+</ol>
+
+</body>
+
+</html>
