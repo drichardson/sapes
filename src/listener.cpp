@@ -134,7 +134,7 @@ int Listener::Run()
 		{
 			delete m_pSender;
 			m_pSender = 0;
-			m_log.log("Listener_Run: Error creating sender thread.");
+			m_log.log(LOG_ERROR, "Listener::Run(): Error creating sender thread.");
 			return 1;
 		}
 	}
@@ -144,7 +144,7 @@ int Listener::Run()
 
 	if(smtp_listen_socket == INVALID_SOCKET)
 	{
-		m_log.log("Listener_Run: Could not create SMTP listen socket.");
+		m_log.log(LOG_ERROR, "Listener::Run(): Could not create SMTP listen socket.");
 		return 1;
 	}
 
@@ -155,14 +155,14 @@ int Listener::Run()
 
 	if(bind(smtp_listen_socket, (sockaddr*)&listen_addr, sizeof listen_addr) != 0)
 	{
-		m_log.log("Listener_Run: Could not bind to address.");
+		m_log.log(LOG_ERROR, "Listener::Run(): Could not bind to address.");
 		closesocket(smtp_listen_socket);
 		return 1;
 	}
 
 	if(listen(smtp_listen_socket, SOMAXCONN) != 0)
 	{
-		m_log.log("Listener_Run: Could not set socket to listen socket.");
+		m_log.log(LOG_ERROR, "Listener::Run(): Could not set socket to listen socket.");
 		closesocket(smtp_listen_socket);
 		return 1;
 	}
@@ -172,7 +172,7 @@ int Listener::Run()
 
 	if(pop3_listen_socket == INVALID_SOCKET)
 	{
-		m_log.log("Listener_Run: Could not create POP3 listen socket.");
+		m_log.log(LOG_ERROR, "Listener::Run(): Could not create POP3 listen socket.");
 		closesocket(smtp_listen_socket);
 		return 1;
 	}
@@ -183,7 +183,7 @@ int Listener::Run()
 
 	if(bind(pop3_listen_socket, (sockaddr*)&listen_addr, sizeof listen_addr) != 0)
 	{
-		m_log.log("Listener_Run: Could not bind POP3 listen socket to address.");
+		m_log.log(LOG_WARN, "Listener::Run(): Could not bind POP3 listen socket to address.");
 		closesocket(smtp_listen_socket);
 		closesocket(pop3_listen_socket);
 		return 1;
@@ -191,7 +191,7 @@ int Listener::Run()
 
 	if(listen(pop3_listen_socket, SOMAXCONN) != 0)
 	{
-		m_log.log("Listener_Run: Could not set POP3 socket to listen socket.");
+		m_log.log(LOG_WARN, "Listener::Run(): Could not set POP3 socket to listen socket.");
 		closesocket(smtp_listen_socket);
 		closesocket(pop3_listen_socket);
 		return 1;
@@ -205,7 +205,7 @@ int Listener::Run()
 
 		if(http_listen_socket == INVALID_SOCKET)
 		{
-			m_log.log("Listener_Run: Could not create HTTP listen socket.");
+			m_log.log(LOG_WARN, "Listener::Run(): Could not create HTTP listen socket.");
 			closesocket(smtp_listen_socket);
 			closesocket(pop3_listen_socket);
 			return 1;
@@ -217,7 +217,7 @@ int Listener::Run()
 
 		if(bind(http_listen_socket, (sockaddr*)&listen_addr, sizeof listen_addr) != 0)
 		{
-			m_log.log("Listener_Run: Could not bind HTTP listen socket to address.");
+			m_log.log(LOG_WARN, "Listener::Run(): Could not bind HTTP listen socket to address.");
 			closesocket(smtp_listen_socket);
 			closesocket(pop3_listen_socket);
 			closesocket(http_listen_socket);
@@ -226,7 +226,7 @@ int Listener::Run()
 
 		if(listen(http_listen_socket, SOMAXCONN) != 0)
 		{
-			m_log.log("Listener_Run: Could not set HTTP socket to listen socket.");
+			m_log.log(LOG_WARN, "Listener::Run(): Could not set HTTP socket to listen socket.");
 			closesocket(smtp_listen_socket);
 			closesocket(pop3_listen_socket);
 			closesocket(http_listen_socket);
@@ -249,7 +249,7 @@ int Listener::Run()
 		// This shouldn't happen since we have no timeout.
 		if(ready == 0)
 		{
-			m_log.log("Listener_Run: ready == 0. Doesn't make sense");
+			m_log.log(LOG_WARN, "Listener::Run(): ready == 0. Doesn't make sense");
 			continue;
 		}
 
@@ -271,7 +271,7 @@ int Listener::Run()
 
 			if(sock == INVALID_SOCKET)
 			{
-				m_log.log("Listener_Run: Error accepting SMTP connection.");
+				m_log.log(LOG_WARN, "Listener::Run(): Error accepting SMTP connection.");
 				continue;
 			}
 
@@ -280,7 +280,7 @@ int Listener::Run()
 
 			if(!create_thread(run_smpt_server, pSD))
 			{
-				m_log.log("Listener_Run: Could not create SMTP server thread.");
+				m_log.log(LOG_ERROR, "Listener::Run(): Could not create SMTP server thread.");
 				continue;
 			}
 		}
@@ -293,7 +293,7 @@ int Listener::Run()
 
 			if(sock == INVALID_SOCKET)
 			{
-				m_log.log("Listener_Run: Error accepting POP3 connection.");
+				m_log.log(LOG_WARN, "Listener::Run(): Error accepting POP3 connection.");
 				continue;
 			}
 
@@ -302,7 +302,7 @@ int Listener::Run()
 
 			if(!create_thread(run_pop3_server, pSD))
 			{
-				m_log.log("Listener_Run: Could not create POP3 server thread.");
+				m_log.log(LOG_ERROR, "Listener::Run(): Could not create POP3 server thread.");
 				continue;
 			}
 		}
@@ -315,7 +315,7 @@ int Listener::Run()
 
 			if(sock == INVALID_SOCKET)
 			{
-				m_log.log("Listener_Run: Error accepting HTTP connection.");
+				m_log.log(LOG_WARN, "Listener::Run(): Error accepting HTTP connection.");
 				continue;
 			}
 
@@ -324,14 +324,14 @@ int Listener::Run()
 
 			if(!create_thread(run_http_server, pSD))
 			{
-				m_log.log("Listener_Run: Could not create HTTP server thread.");
+				m_log.log(LOG_WARN, "Listener::Run(): Could not create HTTP server thread.");
 				continue;
 			}
 		}
 
 	}
 
-	m_log.log("Listener_Run: Listener shutting down.");
+	m_log.log(LOG_STATUS, "Listener::Run(): Listener shutting down.");
 	
 	if(smtp_listen_socket != INVALID_SOCKET)
 		closesocket(smtp_listen_socket);

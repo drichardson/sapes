@@ -255,7 +255,7 @@ int Server::run()
 	}
 	catch(SocketError & e)
 	{
-		m_log.log("Server_run: SMTP server error: %s", e.errMsg());
+		m_log.log(LOG_WARN, "Server::run(): SMTP server error: %s", e.errMsg());
 		return 1;
 	}
 
@@ -423,7 +423,7 @@ void Server::data(char* /*command*/)
 
 	if(rc < 0)
 	{
-		m_log.log("Server_data: Error writing header to send file.");
+		m_log.log(LOG_SERVER, "Server::data(): Error writing header to send file.");
 		reply(452);
 		goto cleanup;
 	}
@@ -440,7 +440,7 @@ void Server::data(char* /*command*/)
 				fwrite(CRLF, 1, 2, fp) != 2)
 			{
 				reply(452);
-				m_log.log("Server_data: Error writing user data to send file.");
+				m_log.log(LOG_SERVER, "Server::data(): Error writing user data to send file.");
 				goto cleanup;
 			}
 		}
@@ -448,7 +448,7 @@ void Server::data(char* /*command*/)
 		if(!got_line)
 		{
 			reply(500);
-			m_log.log("Server_data: Error while receiving DATA from client.");
+			m_log.log(LOG_SERVER, "Server::data(): Error while receiving DATA from client.");
 			goto cleanup;
 		}
 	}
@@ -462,7 +462,7 @@ void Server::data(char* /*command*/)
 
 	if(fprintf(fp, ".%s", CRLF) < 0)
 	{
-		m_log.log("Server_data: Error writing '.' terminator to send file.");
+		m_log.log(LOG_SERVER, "Server::data(): Error writing '.' terminator to send file.");
 		reply(452);
 		goto cleanup;
 	}

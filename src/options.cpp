@@ -129,19 +129,31 @@ bool Options::loadValuesFromFile(const char* filename)
 
 	//Check the log_file option and update the logger with the file name
 	if (cf.getValue("log_file", buf, sizeof(buf))) {
-		Log temp(buf);
+		m_log.GlobalLogFile(buf);
 	} else {
-		m_log.log("loadValuesFromFile: No log file defined in config file");
+		m_log.log(LOG_WARN, "Options::loadValuesFromFile(): No log file defined in config file");
 	}
 
 	//Timestamp log messages?
 	if (cf.getValue("log_timestamp", buf, sizeof(buf))) {
 		int stamp = atoi(buf);
 
-		if (stamp != 0) {
-			Log temp;
-			temp.timestamp(true);
-		}
+		if (stamp != 0) 
+			m_log.timestamp(true);
+		else
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid timestamp option (%d)", stamp);
+	}
+
+	//Check the log level
+	if (cf.getValue("log_level", buf, sizeof(buf))) {
+		int lvl = atoi(buf);
+
+		//make sure the received level is within bounds (see log.h)
+		if (lvl >= LOG_LEVEL_LOW && lvl <= LOG_LEVEL_HIGH) 
+			m_log.loglevel(lvl);
+		else
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid log level (%d). Range is from %d to %d", 
+								lvl, LOG_LEVEL_LOW, LOG_LEVEL_HIGH);
 	}
 
 	// send_dir is required. Return false if it is not found.
@@ -152,7 +164,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	}
 	else
 	{
-		m_log.log("loadValuesFromFile: Required field 'send_dir' not found.");
+		m_log.log(LOG_ERROR, "Options::loadValuesFromFile(): Required field 'send_dir' not found.");
 		return false;
 	}
 
@@ -162,7 +174,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		int count = atoi(buf);
 
 		if(count < 0)
-			m_log.log("loadValuesFromFile: Invalid domain_count value (%d, which is less than 0). No default used.");
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid domain_count value (%d, which is less than 0). No default used.");
 		else
 		{
 			for(unsigned int i = 1; i <= (unsigned int)count; ++i)
@@ -173,14 +185,14 @@ bool Options::loadValuesFromFile(const char* filename)
 				safe_snprintf(buf, sizeof(buf), "domain%u", i);
 				if(!cf.getValue(buf, domain, sizeof(domain)))
 				{
-					m_log.log("loadValuesFromFile: Could not read value for %s", buf);
+					m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Could not read value for %s", buf);
 					return false;
 				}
 
 				safe_snprintf(buf, sizeof(buf), "domain%u_mailboxes", i);
 				if(!cf.getValue(buf, mailbox, sizeof(mailbox)))
 				{
-					m_log.log("loadValuesFromFile: Could not read value for %s", buf);
+					m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Could not read value for %s", buf);
 					return false;
 				}
 				else
@@ -190,7 +202,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	}
 	else
 	{
-		m_log.log("loadValuesFromFile: Required field 'domain_count' not found.");
+		m_log.log(LOG_ERROR, "Options::loadValuesFromFile(): Required field 'domain_count' not found.");
 		return false;
 	}
 
@@ -199,7 +211,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
 		{
-			m_log.log("loadValuesFromFile: Invalid smtp_port value (%d, which is less than 1). Default (%d) used.",
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid smtp_port value (%d, which is less than 1). Default (%d) used.",
 					  tmp, m_smtp_listen_port);
 		}
 		else
@@ -211,7 +223,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
 		{
-			m_log.log("loadValuesFromFile: Invalid pop3_port value (%d, which is less than 1). Default (%d) used.",
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid pop3_port value (%d, which is less than 1). Default (%d) used.",
 					  tmp, m_pop3_listen_port);
 		}
 		else
@@ -223,7 +235,7 @@ bool Options::loadValuesFromFile(const char* filename)
 		short tmp = (short)atoi(buf);
 		if(tmp < 1)
 		{
-			m_log.log("loadValuesFromFile: Invalid http_port value (%d, which is less than 1). Default (%d) used.",
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid http_port value (%d, which is less than 1). Default (%d) used.",
 					  tmp, m_http_listen_port);
 		}
 		else
@@ -234,7 +246,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	{
 		int tmp = atoi(buf);
 		if(tmp < 1)
-			m_log.log("loadValuesFromFile: Invalid scan_interval value (%d, which is less than 1). Default (%d) used.", tmp);
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid scan_interval value (%d, which is less than 1). Default (%d) used.", tmp);
 		else
 			m_scan_interval = tmp;
 	}
@@ -243,7 +255,7 @@ bool Options::loadValuesFromFile(const char* filename)
 	{
 		int tmp = atoi(buf);
 		if(tmp < 1)
-			m_log.log("loadValuesFromFile: Invalid sender_thread value (%d, which is less than 1). Default (%d) used.", tmp);
+			m_log.log(LOG_WARN, "Options::loadValuesFromFile(): Invalid sender_thread value (%d, which is less than 1). Default (%d) used.", tmp);
 		else
 			m_sender_threads = tmp;
 	}

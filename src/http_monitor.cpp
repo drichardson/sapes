@@ -277,7 +277,7 @@ int HttpMonitor::run()
 	}
 	catch(Exception & e)
 	{
-		m_log.log("HTTP_run: HTTP monitor error: %s", e.errMsg());
+		m_log.log(LOG_WARN, "HTTP::run(): HTTP monitor error: %s", e.errMsg());
 		return 1;
 	}
 	
@@ -345,7 +345,7 @@ void HttpMonitor::get(char* get_command)
 	}
 	catch(SocketError & e)
 	{
-		m_log.log("HTTP_get: HTTP monitor error while processing GET request: %s", e.errMsg());
+		m_log.log(LOG_WARN, "HTTP::get(): HTTP monitor error while processing GET request: %s", e.errMsg());
 	}
 }
 

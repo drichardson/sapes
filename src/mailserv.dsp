@@ -220,7 +220,7 @@ SOURCE=.\utility.h
 # End Group
 # Begin Source File
 
-SOURCE=.\Debug\config.txt
+SOURCE=.\Debug\sapes.conf
 # End Source File
 # End Target
 # End Project

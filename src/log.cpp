@@ -54,7 +54,7 @@ void log_init()
 		}
 	}
 
-	log_opts.loglevel = 1;
+	log_opts.loglevel = LOG_STATUS; //Default is log_status until this is reset by safes.conf
 	log_opts.timestamp = 0;
 	log_opts.max_file_size = LOG_MAX_SIZE;
 }
@@ -85,8 +85,8 @@ Log::Log() {
 }
 
 Log::Log(char* sFile) {
-	m_usepvt = false;
-	file(sFile);
+	m_usepvt = true;
+	PrivateLogFile(sFile);
 }
 
 Log::~Log() {
@@ -94,15 +94,15 @@ Log::~Log() {
 		free(m_pvtfile);
 }
 
-/* Log::file()
-   ===========
+/* Log::GlobalLogFile()
+   ====================
    General: Sets the path to the log file
    Usage  : Log::file(<filename>)
    Returns: The file name
 
    Created By: Oren Nachman
 */
-char* Log::file(char *sFile) {
+char* Log::GlobalLogFile(char *sFile) {
 	
 	free(log_opts.file_name);
 
@@ -114,22 +114,32 @@ char* Log::file(char *sFile) {
 /* Log::log()
    ========== 
    General: Logs a message
-   Usage  : As with printf etc. ->log("<string format>", params);
+   Usage  : Start with log level (see Notes) then continue as with printf etc. ->log("<string format>", params);
    Returns: void
-   Note   : Updated to log to a file.
+   Notes  : Log Level keys are currently:
+				1 - LOG_ERROR  - Errors
+                2 - LOG_WARN   - Warnings
+                3 - LOG_STATUS - Status Messages
+                4 - LOG_SERVER - Server Interactions
+                *5 - Full
+			*5 - This is a log level that is used in the sapes.conf file, but should not be used
+			     by code. Code runs up to 4 (currently)
 
    Created By: Douglas Ryan Richardson
    Updates   : Oren Nachman - Log to file
 */
-void Log::log(const char* format, ...) const {
+void Log::log(int lvl, const char* format, ...) const {
 
 	if (wait_mutex(log_mutex)) {
 		va_list va;
 		FILE* fLog;
 		char* filename;
 
-
 		va_start(va, format);
+
+		//Requested logging level is out of our league...
+		if (lvl > log_opts.loglevel)
+			return;
 
 		//I was considering putting in fall back code - where if m_pvtfile can not be opened then 
 		//logs fall back to the main log - but this would be counterproductive (think of wading through
@@ -207,9 +217,9 @@ void Log::CheckLogSize(char* filename) const {
 		}
 
 		if (iFiles >= 50) {
-			log("Log::CheckLogSize: Current log exceeds max size - but can not be moved to an archive (after 50 tries)! - %s", archive);
+			log(LOG_WARN, "Log::CheckLogSize(): Current log exceeds max size - but can not be moved to an archive (after 50 tries)! - %s", archive);
 		} else {
-			log("Log::CheckLogSize: Log exceeded maximum size and was archived to: %s", archive);
+			log(LOG_STATUS, "Log::CheckLogSize(): Log exceeded maximum size and was archived to: %s", archive);
 		}
 
 		free(archive);

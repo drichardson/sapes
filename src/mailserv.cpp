@@ -174,7 +174,9 @@ int main(int argc, char *argv[])
 		return bRet;
 
 	} else if (strcmp(argv[1], "reload") == 0) {
+
 		//TODO: Implement custom message that will signal an options reload
+	
 	} else if (strcmp(argv[1], "start_alone") == 0) {
 		char *sPath = (char *)malloc(1024);
 
@@ -194,13 +196,19 @@ int main(int argc, char *argv[])
 
 		free(sPath); //dealloc memory before continuing
 	
+		Log logger;
+
+		logger.log(LOG_STATUS, "Server starting in stand-alone mode..");
+
 		Listener listener(opts);
 		g_pListener = &listener;
 		int rc = listener.Run();
 		g_pListener = NULL;
 
-		log_uninit();
+		logger.log(LOG_STATUS, "Server shutting down..");
 
+		log_uninit();
+		
 		return rc;
 	} else if (strcmp(argv[1], "install") == 0) {
 

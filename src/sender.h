@@ -30,8 +30,8 @@
 #ifndef MAILSERV_SENDER_H
 #define MAILSERV_SENDER_H
 
-#include "socket.h"
 #include "log.h"
+#include "socket.h"
 #include "options.h"
 #include "accounts.h"
 #include "thread.h"

@@ -76,10 +76,14 @@ bool ConfigFile::getValue(const char* valuename, char* value, size_t valueBufSiz
 	{
 		if(strncasecmp(valuename, line, len) == 0)
 		{
-			if(line[len] == ':')
+			//Oren - If only the value name exists, but no value - return false
+			if(line[len] == ':' && (line[len + 1] != '\0'))
 			{
 				safe_strcpy(value, line + len + 1, valueBufSize);
-				found = true;
+
+				//Oren - if the value is made up of only spaces then it is also invalid
+				if (strspn(value, " ") != strlen(value))
+					found = true;
 			}
 		}
 	}

@@ -44,6 +44,14 @@ void log_uninit();
 
 #define LOG_MAX_SIZE 250000;
 
+#define LOG_LEVEL_LOW 1
+#define LOG_LEVEL_HIGH 5
+
+#define LOG_ERROR 1
+#define LOG_WARN 2
+#define LOG_STATUS 3
+#define LOG_SERVER 4
+
 //Since the log options need to be static and there are a few options they
 //are stored in an external struct. The actual var is defined in log.cpp
 //Params from here are read and written via Log()
@@ -62,16 +70,17 @@ public:
 	Log(char* file);
 	~Log();
 
-	void log(const char* format, ...) const;
-	char* file(char* sFile);	
+	void log(int lvl, const char* format, ...) const;
+
+	char* GlobalLogFile(char* sFile);	
+	char* PrivateLogFile(char* filename);
+	char* PrivateLogFile();
 
 	void timestamp(bool opt);
 	bool Log::timestamp();
 
 	int loglevel(int level);
 	int loglevel();
-	char* PrivateLogFile(char* filename);
-	char* PrivateLogFile();
 
 	void Log::CheckLogSize(char* filename) const; //called by log() which is also const
 

@@ -63,7 +63,7 @@ Accounts::Accounts()
 m_lock_tree(0)
 {
 	if(!create_mutex(m_LockTreeMutex))
-		m_log.log("Accounts: Could not create lock tree mutex.");
+		m_log.log(LOG_WARN, "Accounts: Could not create lock tree mutex.");
 }
 
 Accounts::~Accounts()
@@ -118,7 +118,7 @@ FILE* Accounts::newMessage(const char* domain, const char* mailbox, char** pNewM
 
 	if(!mailbox_dir)
 	{
-		m_log.log("newMessage: Mailbox directory not set for the %s domain.", domain);
+		m_log.log(LOG_ERROR, "newMessage: Mailbox directory not set for the %s domain.", domain);
 		return NULL;
 	}
 
@@ -129,7 +129,7 @@ FILE* Accounts::newMessage(const char* domain, const char* mailbox, char** pNewM
 
 	if(!fp)
 	{
-		m_log.log("newMessage: Could not create message file in '%s' for %s domain.", mailbox_dir, domain);
+		m_log.log(LOG_ERROR, "Accounts::newMessage(): Could not create message file in '%s' for %s domain.", mailbox_dir, domain);
 		return NULL;
 	}
 
@@ -144,7 +144,7 @@ bool Accounts::acquirePOP3lock(const char* domain, const char* mailbox)
 
 	if(!wait_mutex(m_LockTreeMutex))
 	{
-		m_log.log("acquirePOP2lock: Can't acquire POP3 lock because I cannot acquire the lock tree mutex.");
+		m_log.log(LOG_WARN, "acquirePOP2lock: Can't acquire POP3 lock because I cannot acquire the lock tree mutex.");
 		delete[] fully_qualified_username;
 		return false;
 	}
@@ -207,7 +207,7 @@ bool Accounts::releasePOP3lock(const char* domain, const char* mailbox)
 
 	if(!wait_mutex(m_LockTreeMutex))
 	{
-		m_log.log("releasePOP3lock: Could not release POP3 lock because I couldn't acquire the lock tree mutex.");
+		m_log.log(LOG_WARN, "releasePOP3lock: Could not release POP3 lock because I couldn't acquire the lock tree mutex.");
 		delete[] fully_qualified_username;
 		return false;
 	}
