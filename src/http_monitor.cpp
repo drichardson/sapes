@@ -129,7 +129,7 @@ class HttpResponse
 	unsigned int m_data_len;
 
 public:
-	HttpResponse(HTTP_RESPONSE_CODE code);
+	HttpResponse(HTTP_RESPONSE_CODE code, bool isHTMLResponse = true);
 
 	// HttpResponse automatically comptes the content-length header, so
 	// there is no need to set it here. addHeader is for other headers.
@@ -145,10 +145,12 @@ public:
 	void send(Socket & s);
 };
 
-HttpResponse::HttpResponse(HTTP_RESPONSE_CODE code)
+HttpResponse::HttpResponse(HTTP_RESPONSE_CODE code, bool isHTMLResponse)
 	: m_response_code(code),
 	  m_data_len(0)
 {
+	if(isHTMLResponse)
+		addHeader("Content-Type: text/html");
 }
 
 void HttpResponse::addHeader(const char* headerval)
@@ -293,8 +295,6 @@ void HttpMonitor::err(HTTP_RESPONSE_CODE errcode, const char* msg)
 	{
 	case HTTP_NOTFOUND:
 	{
-		r.addHeader("Content-Type: text/html");
-		
 		FILE *fp = m_options.getResourceFile("404.html");
 		if(fp)
 		{
@@ -331,8 +331,13 @@ void HttpMonitor::get(char* get_command)
 			return;
 		}
 
+		const char DOMAIN_PREFIX[] = "/domain/";
+		const char DOMAIN_PREFIX_LEN = sizeof(DOMAIN_PREFIX) - 1;
+		
 		if(strcmp(path, "/") == 0)
 			get_main();
+		else if(strncmp(path, DOMAIN_PREFIX, DOMAIN_PREFIX_LEN) == 0)
+			get_domain(path + DOMAIN_PREFIX_LEN);
 		else
 			err(HTTP_NOTFOUND);
 	}
@@ -342,11 +347,31 @@ void HttpMonitor::get(char* get_command)
 	}
 }
 
+void HttpMonitor::get_domain(const char* domain)
+{
+	// Get the main status page.
+	HttpResponse r(HTTP_OK);
+
+	const char pre_html[] =
+		DOCTYPE_STRICT
+		"<html>\n<head><title>sapes - domain information</title></head>\n"
+		"<body>\n";
+	
+	r.addData(pre_html, sizeof(pre_html) - 1);
+
+	r.addData("<h1>");
+	r.addData(domain);
+	r.addData("</h1>\n<p>Here is some information.");
+	
+	const char post_html[] = "\n</body>\n</html>";
+	r.addData(post_html, sizeof(post_html) - 1);
+	r.send(m_sock);	
+}
+
 void HttpMonitor::get_main()
 {
 	// Get the main status page.
 	HttpResponse r(HTTP_OK);
-	r.addHeader("Content-Type: text/html");
 
 	const char pre_html[] =
 		DOCTYPE_STRICT

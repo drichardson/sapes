@@ -46,6 +46,7 @@ class HttpMonitor
 	void err(HTTP_RESPONSE_CODE http_res, const char* msg = NULL); // Send HTTP error to client.
 	void get(char *command); // Process an HTTP GET request.
 	void get_main();
+	void get_domain(const char* domain);
 	
 public:
 	HttpMonitor(SOCKET sock, Accounts & accounts, const Options & options);
