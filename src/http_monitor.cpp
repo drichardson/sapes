@@ -348,6 +348,7 @@ void HttpMonitor::get_domain(const char* domain)
 {
 	// Make sure the domain exists.
 	bool bDomainFound = false;
+	int index = 0;
 	for(const DomainList *pDL = m_options.domains(); pDL; pDL = pDL->next)
 	{
 		if(strcasecmp(pDL->domain, domain) == 0)
@@ -355,6 +356,7 @@ void HttpMonitor::get_domain(const char* domain)
 			bDomainFound = true;
 			break;
 		}
+		index++;
 	}
 
 	if(bDomainFound)
@@ -371,8 +373,42 @@ void HttpMonitor::get_domain(const char* domain)
 
 		r.addData("<h1>");
 		r.addData(domain);
-		r.addData("</h1>\n<p>Here is some information.");
-		
+
+		const DomainList *pL = m_options.domains(); 
+		//find the mailbox directory for the domain
+		for (int i = 0; i < index; i++)
+		{
+			pL = pL->next;
+		}
+			
+		r.addData("</h1>\n<p>Here is mailbox information.<br>");
+		//show the mailbox directory
+		r.addData(pL->mailbox_dir);
+		r.addData("<br>");
+		r.addData("accounts:<br>");
+
+		WIN32_FIND_DATA fd;
+		::SetCurrentDirectory(pL->mailbox_dir);
+		HANDLE hFind = ::FindFirstFile("*.*", &fd);
+		if (hFind != INVALID_HANDLE_VALUE)
+		{
+			
+			do {
+				if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				{
+					
+					if ( (strcmp(fd.cFileName,  ".") != 0) && (strcmp(fd.cFileName, "..") != 0) )
+					{	
+						//show each of the accounts
+						r.addData(fd.cFileName);
+						r.addData("<br>");
+					}
+				}
+			}while (::FindNextFile(hFind, &fd));
+			
+			::FindClose(hFind);
+		}
+
 		const char post_html[] = "\n</body>\n</html>";
 		r.addData(post_html, sizeof(post_html) - 1);
 		r.send(m_sock);
@@ -402,8 +438,12 @@ void HttpMonitor::get_main()
 		safe_snprintf(buf, sizeof(buf),
 					  "\n<li><a href=\"/domain/%s\">%s</a>",
 					  pDL->domain, pDL->domain);
+
 		r.addData(buf);
+		
 	}
+
+	
 	
 	const char post_html[] = "\n</ol>\n</body>\n</html>";
 	r.addData(post_html, sizeof(post_html) - 1);
