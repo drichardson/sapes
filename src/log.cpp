@@ -162,10 +162,10 @@ void Log::log(const char* format, ...) const {
 		fputc('\n', fLog);
 		
 
-		if (fLog != stdout) 
+		if (fLog != stdout) {
 			fclose(fLog);
-
-		CheckLogSize(filename);
+			CheckLogSize(filename);
+		}
 
 		va_end(va);
 
@@ -203,7 +203,6 @@ void Log::CheckLogSize(char* filename) const {
 		close(log_file); //close so that we can move the file
 
 		while(rename(log_opts.file_name, archive) && iFiles < 50) {
-			printf("%d\n", GetLastError());
 			sprintf(archive, "%s.%d%d%d.%d", filename, tmLocal->tm_mday, tmLocal->tm_mon, tmLocal->tm_year, iFiles++);
 		}
 
