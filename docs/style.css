@@ -1,0 +1,5 @@
+.sample-file { border-style: solid; border-width: thin; padding: 10px }
+dt { font-weight: bold; }
+ol.mainsections { list-style-type: upper-roman; }
+ol.subsections { list-style-type: lower-roman; }
+.navmenu { background-color: #EEEEEE; }
