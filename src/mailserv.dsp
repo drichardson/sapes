@@ -135,6 +135,10 @@ SOURCE=.\server.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\service.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\socket.cpp
 # End Source File
 # Begin Source File
@@ -192,6 +196,10 @@ SOURCE=.\sender.h
 # Begin Source File
 
 SOURCE=.\server.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\service.h
 # End Source File
 # Begin Source File
 
