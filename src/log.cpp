@@ -168,3 +168,4 @@ void Log::log(const char* format, ...) const {
 void Log::timestamp(bool opt) {
 	log_opts.timestamp = opt;
 }
+
