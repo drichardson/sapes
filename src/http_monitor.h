@@ -40,6 +40,8 @@ class HttpMonitor
 {	
 	Socket m_sock;
 	Log m_log;
+	Accounts & m_accounts;
+	const Options & m_options;
 
 	void err(HTTP_RESPONSE_CODE http_res, const char* msg = NULL); // Send HTTP error to client.
 	void get(char *command); // Process an HTTP GET request.

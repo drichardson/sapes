@@ -121,6 +121,7 @@ public:
 
 	// Add the data to send.
 	void addData(const void* data, unsigned int len);
+	void addData(const char* str);
 
 	// Send the response.
 	void send(Socket & s);
@@ -144,6 +145,12 @@ void HttpResponse::addData(const void *data, unsigned int len)
 {
 	m_data.addData(data, len);
 	m_data_len += len;	
+}
+
+void HttpResponse::addData(const char* str)
+{
+	if(str)
+		addData(str, strlen(str));
 }
 
 void HttpResponse::send(Socket & s)
@@ -174,7 +181,9 @@ void HttpResponse::send(Socket & s)
 HttpMonitor::HttpMonitor(SOCKET sock,
 						 Accounts & accounts,
 						 const Options & options)
-	: m_sock(sock)
+	: m_sock(sock),
+	  m_accounts(accounts),
+	  m_options(options)
 {
 }
 
@@ -261,12 +270,27 @@ void HttpMonitor::get(char* get_command)
 	}
 }
 
+#define ADDHTML(html) { const char d[] = html; r.addData(d, sizeof(d) - 1); }
+
 void HttpMonitor::get_main()
 {
 	// Get the main status page.
 	HttpResponse r(HTTP_OK);
 	r.addHeader("Content-Type: text/html");
-	const char d[] = "<html><head><title>Test Page</title></head><body><h1>Test Page</h1></body></html>";
-	r.addData(d, sizeof(d) - 1);
+
+	ADDHTML("<html><head><title>sapes monitor</title></head>\n"
+			"<body>\n"
+			"<h1>sapes monitor</h1></body></html>\n"
+			"<p>\n"
+			"This monitor allows you to view sapes stats. Here is a domain list.\n"
+			"<ol>");
+
+	for(const DomainList *pDL = m_options.domains(); pDL; pDL = pDL->next)
+	{
+		ADDHTML("\n<li>");
+		r.addData(pDL->domain);
+	}
+	
+	ADDHTML("\n</ol>\n</body>\n</html>");
 	r.send(m_sock);
 }
