@@ -33,6 +33,7 @@
 
 #ifdef WIN32
 #include <winsock2.h>
+typedef int socklen_t;
 #else
 
 #include <sys/socket.h>
