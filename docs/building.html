@@ -3,38 +3,46 @@
 
 <head>
 <title>sapes - Building</title>
+<link rel="StyleSheet" href="style.css" type="text/css" media=screen>
+<link rel="next" href="configuration.html">
+<link rel="prev" href="building.html">
+<link rel="contents" href="index.html">
 </head>
 
 <body>
 
+<p class="navmenu">
+<a href="index.html">toc</a>
+<a href="introduction.html">prev</a>
+<a href="configuration.html">next</a>
+</p>
+
 <h1>Building</h1>
+<h2>Get Source Code</h2>
+<p>
+<a href="http://sourceforge.net/project/showfiles.php?group_id=84761&package_id=87489">Download</a>
+the source.
+</p>
+
+<h2>Building on UNIX</h2>
+<p>
+ <ol>
+  <li>Extract the files using: <code>tar xfz &lt;sapes-package&gt;</code></li>
+  <li><code>cd sapes</code></li>
+  <li>Run <code>make</code></li>
+  <li>An executable named mailserv is created.</li>   
+ </ol>
+</p>
+
+<h2>Building on Windows</h2>
 <ol>
+ <li>Open mailserv.dsw in Microsoft Visual Studio 6.0.
+ <li>Run Build</li>
  <li>
-  <a href="http://sourceforge.net/project/showfiles.php?group_id=84761&package_id=87489">Download</a> the source
+  If you did a debug build, then mailserv.exe is in the Debug sub-directory.
+  If you did a release build, then mailserv.exe is in the Release sub-directory.
  </li>
-
- <li>UNIX
-  <ol>
-   <li>Extract the files using: <code>tar xfz &lt;sapes-package&gt;</code></li>
-   <li><code>cd sapes</code></li>
-   <li>Run <code>make</code></li>
-   <li>An executable named mailserv is created.</li>   
-  </ol>
- </li>
-
- <li>Windows</li>
-  <ol>
-   <li>Open mailserv.dsw in Microsoft Visual Studio 6.0.
-   <li>Run Build</li>
-   <li>
-    If you did a debug build, then mailserv.exe is in the Debug sub-directory.
-	If you did a release build, then mailserv.exe is in the Release sub-directory.
-   </li>
-  </ol>
- </li>
- 
 </ol>
 
 </body>
-
 </html>

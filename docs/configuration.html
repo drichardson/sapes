@@ -3,15 +3,25 @@
 
 <head>
 <title>sapes - Configuration</title>
+<link rel="StyleSheet" href="style.css" type="text/css" media=screen>
+<!--<link rel="next" href="building.html">-->
+<link rel="prev" href="building.html">
+<link rel="contents" href="index.html">
 </head>
 
 <body>
+
+<p class="navmenu">
+<a href="index.html">toc</a>
+<a href="building.html">prev</a>
+next
+</p>
 
 <h1>Configuration</h1>
 
 <ol>
  <li>
-  Overview
+  <h2><a name="overview">Overview</a></h2>
   <p>
    Configuring sapes involves two things: (1) setting up config.txt and (2) setting
    up the file system.
@@ -22,7 +32,7 @@
  </li>
 
  <li>
-  config.txt
+  <h2><a name="config.txt">config.txt</a></h2>
   <p>
    config.txt is were all of the sapes parameters are stored. mailserv, the
    sapes program, looks for config.txt in the working directory. If you don't
@@ -77,7 +87,8 @@
 
   <p>
   Here is an example config.txt file.
-  <pre style="border-style: solid; border-width: thin;">
+  <!-- Put this in a table so that the border is around the end of the text -->
+  <table><tr><td><pre class="sample-file">
 smtp_port:2025
 pop3_port:20110
 http_port:2080
@@ -89,10 +100,10 @@ domain1:the-richardsons.org
 domain1_mailboxes:/home/doug/oss/sf/sapes/data/mailboxes/the-richardsons.org
 use_http_monitor:1
 resource_dir:/home/doug/oss/sf/sapes/resource
-</pre>
+</pre></td></tr></table>
  </li>
 
- <li>File System
+ <li><h2><a name="filesystem">File System</a></h2>
   <ol>
    <li>
     Domains
@@ -110,7 +121,7 @@ resource_dir:/home/doug/oss/sf/sapes/resource
  </ol>
 
  <li>
-  Setting up the domain
+  <h2><a name="domainsetup">Domain Setup</a></h2>
   <p>
    In order to get the e-mail server setup correctly you will have to have
    a domain that you can configure. You will then need to set the MX
