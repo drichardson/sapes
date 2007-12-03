@@ -33,7 +33,8 @@
 class Exception
 {
 public:
-	virtual const char* errMsg() const = 0;	
+	virtual const char* errMsg() const = 0;
+	virtual ~Exception() {};
 };
 
 class RuntimeException : public Exception
